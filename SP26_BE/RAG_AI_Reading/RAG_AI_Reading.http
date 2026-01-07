@@ -1,0 +1,6 @@
+@RAG_AI_Reading_HostAddress = http://localhost:5290
+
+GET {{RAG_AI_Reading_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
