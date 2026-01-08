@@ -6,7 +6,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Service
 {
@@ -22,18 +21,16 @@ namespace Service
         }
 
         public async Task<(bool Success, string Message, User? User)> RegisterAsync(
-            string fullName, 
-            string email, 
-            string password, 
+            string fullName,
+            string email,
+            string password,
             string? avatarUrl = null)
         {
-            // Kiểm tra email đã tồn tại chưa
             if (await _userRepository.EmailExistsAsync(email))
             {
                 return (false, "Email đã được sử dụng", null);
             }
 
-            // Validate input
             if (string.IsNullOrWhiteSpace(fullName) || fullName.Length < 2)
             {
                 return (false, "Tên phải có ít nhất 2 ký tự", null);
@@ -49,36 +46,32 @@ namespace Service
                 return (false, "Mật khẩu phải có ít nhất 6 ký tự", null);
             }
 
-            // Hash password
             string passwordHash = HashPassword(password);
 
-            // Tạo user mới
             var newUser = new User
             {
-                FullName = fullName,
+                FullName = fullName,    
                 Email = email,
                 PasswordHash = passwordHash,
                 AvatarUrl = avatarUrl,
-                Role = "User", // Mặc định là User
+                Role = "User",
                 IsActive = true,
                 CreatedAt = DateTime.Now
             };
 
-            var createdUser = await _userRepository.CreateUserAsync(newUser);
+            var createdUser = await _userRepository.CreateAsync(newUser);
             return (true, "Đăng ký thành công", createdUser);
         }
 
         public async Task<(bool Success, string Message, User? User)> LoginAsync(string email, string password)
         {
-            // Tìm user theo email
             var user = await _userRepository.GetByEmailAsync(email);
-            
+
             if (user == null)
             {
                 return (false, "Email hoặc mật khẩu không đúng", null);
             }
 
-            // Verify password
             if (!VerifyPassword(password, user.PasswordHash))
             {
                 return (false, "Email hoặc mật khẩu không đúng", null);
@@ -110,22 +103,118 @@ namespace Service
                 issuer: _configuration["Jwt:Issuer"],
                 audience: _configuration["Jwt:Audience"],
                 claims: claims,
-                expires: DateTime.Now.AddHours(Convert.ToDouble(_configuration["Jwt:ExpiresInHours"] ?? "24")),
+                expires: DateTime.Now.AddHours(1), // Access token có hạn ngắn
                 signingCredentials: credentials
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
-        private bool VerifyPassword(string password, string passwordHash)
+
+        public string GenerateRefreshToken()
         {
-            // Assuming passwordHash is a Base64-encoded SHA256 hash
+            var randomNumber = new byte[64];
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(randomNumber);
+            return Convert.ToBase64String(randomNumber);
+        }
+
+        public async Task<(bool Success, string Message, User? User)> RefreshTokenAsync(string refreshToken)
+        {
+            var user = await _userRepository.GetByRefreshTokenAsync(refreshToken);
+
+            if (user == null)
+            {
+                return (false, "Refresh token không hợp lệ", null);
+            }
+
+            if (user.RefreshTokenExpiryTime <= DateTime.Now)
+            {
+                return (false, "Refresh token đã hết hạn", null);
+            }
+
+            return (true, "Refresh token thành công", user);
+        }
+
+        public async Task<(bool Success, string Message)> SaveRefreshTokenAsync(User user, string refreshToken)
+        {
+            user.RefreshToken = refreshToken;
+            user.RefreshTokenExpiryTime = DateTime.Now.AddDays(7); // Refresh token có hạn 7 ngày
+
+            await _userRepository.UpdateAsync(user);
+            return (true, "Lưu refresh token thành công");
+        }
+
+        public async Task<(bool Success, string Message)> ForgotPasswordAsync(string email)
+        {
+            var user = await _userRepository.GetByEmailAsync(email);
+
+            if (user == null)
+            {
+                // Vẫn trả về success để tránh lộ thông tin user có tồn tại hay không
+                return (true, "Nếu email tồn tại, link reset mật khẩu đã được gửi");
+            }
+
+            // Generate reset token
+            var resetToken = GeneratePasswordResetToken();
+            user.PasswordResetToken = resetToken;
+            user.PasswordResetTokenExpiryTime = DateTime.Now.AddHours(1); // Token có hạn 1 giờ
+
+            await _userRepository.UpdateAsync(user);
+
+            // TODO: Gửi email với link reset
+            // Ví dụ: https://yourapp.com/reset-password?token={resetToken}
+            // await _emailService.SendPasswordResetEmailAsync(user.Email, resetToken);
+
+            return (true, $"Token reset mật khẩu: {resetToken} (Trong production, gửi qua email)");
+        }
+
+        public async Task<(bool Success, string Message)> ResetPasswordAsync(string token, string newPassword)
+        {
+            var user = await _userRepository.GetByPasswordResetTokenAsync(token);
+
+            if (user == null)
+            {
+                return (false, "Token không hợp lệ hoặc đã hết hạn");
+            }
+
+            if (newPassword.Length < 6)
+            {
+                return (false, "Mật khẩu phải có ít nhất 6 ký tự");
+            }
+
+            // Update password
+            user.PasswordHash = HashPassword(newPassword);
+            user.PasswordResetToken = null;
+            user.PasswordResetTokenExpiryTime = null;
+
+            await _userRepository.UpdateAsync(user);
+
+            return (true, "Đặt lại mật khẩu thành công");
+        }
+
+        private string GeneratePasswordResetToken()
+        {
+            var randomNumber = new byte[32];
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(randomNumber);
+            return Convert.ToBase64String(randomNumber);
+        }
+
+        private string HashPassword(string password)
+        {
             using (var sha256 = SHA256.Create())
             {
-                var computedHash = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-                var computedHashString = Convert.ToBase64String(computedHash);
-                return computedHashString == passwordHash;
+                var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+                return Convert.ToBase64String(hashedBytes);
             }
         }
+
+        private bool VerifyPassword(string password, string passwordHash)
+        {
+            var hashOfInput = HashPassword(password);
+            return hashOfInput == passwordHash;
+        }
+
         private bool IsValidEmail(string email)
         {
             try
@@ -136,15 +225,6 @@ namespace Service
             catch
             {
                 return false;
-            }
-        }
-        private string HashPassword(string password)
-        {
-            // Hash the password using SHA256 and return as Base64 string
-            using (var sha256 = SHA256.Create())
-            {
-                var hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-                return Convert.ToBase64String(hash);
             }
         }
     }

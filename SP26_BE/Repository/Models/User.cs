@@ -23,6 +23,14 @@ public partial class User
 
     public DateTime CreatedAt { get; set; }
 
+    public string RefreshToken { get; set; }
+
+    public DateTime? RefreshTokenExpiryTime { get; set; }
+
+    public string PasswordResetToken { get; set; }
+
+    public DateTime? PasswordResetTokenExpiryTime { get; set; }
+
     public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
 
     public virtual ICollection<Flag> FlagReporters { get; set; } = new List<Flag>();
