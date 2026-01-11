@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
@@ -28,6 +28,23 @@ namespace RAG_AI_Reading
                         IssuerSigningKey = new SymmetricSecurityKey(
                             Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
                     };
+
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = context =>
+                        {
+                            // Lấy token trực tiếp từ Authorization header
+                            var token = context.Request.Headers["Authorization"].ToString();
+                            
+                            if (!string.IsNullOrEmpty(token))
+                            {
+                                // Loại bỏ "Bearer " nếu có
+                                context.Token = token.Replace("Bearer ", "", StringComparison.OrdinalIgnoreCase).Trim();
+                            }
+                            
+                            return Task.CompletedTask;
+                        }
+                    };
                 });
 
             builder.Services.AddAuthorization();
@@ -38,7 +55,7 @@ namespace RAG_AI_Reading
             {
                 c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
                 {
-                    Description = "JWT Authorization header s? d?ng Bearer scheme. Nh?p 'Bearer' [space] v� token c?a b?n",
+                    Description = "Nhập JWT token của bạn (không cần thêm 'Bearer')",
                     Name = "Authorization",
                     In = Microsoft.OpenApi.Models.ParameterLocation.Header,
                     Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
