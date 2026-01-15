@@ -65,9 +65,6 @@ namespace Repository
         {
             var query = _context.Users
                 .Include(u => u.Projects)
-                .Include(u => u.Comments)
-                .Include(u => u.FollowFollowers)
-                .Include(u => u.FollowAuthors)
                 .AsNoTracking();
 
             if (!includeInactive)
@@ -88,19 +85,15 @@ namespace Repository
             bool includeInactive = false)
         {
             var query = _context.Users
-                .Include(u => u.Projects)
-                .Include(u => u.Comments)
-                .Include(u => u.FollowFollowers)
-                .Include(u => u.FollowAuthors)
+                .Include(u => u.Projects) // ✅ Chỉ còn Projects
+                // ❌ Bỏ: Comments, FollowFollowers, FollowAuthors
                 .AsNoTracking();
 
-            // Filter by active status
             if (!includeInactive)
             {
                 query = query.Where(u => u.IsActive == true);
             }
 
-            // Search filter
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
                 searchTerm = searchTerm.ToLower();
@@ -109,7 +102,6 @@ namespace Repository
                     u.Email.ToLower().Contains(searchTerm));
             }
 
-            // Role filter
             if (!string.IsNullOrWhiteSpace(role))
             {
                 query = query.Where(u => u.Role == role);

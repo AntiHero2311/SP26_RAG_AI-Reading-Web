@@ -5,17 +5,13 @@ using System.Collections.Generic;
 
 namespace Repository.Models;
 
-public partial class ManuscriptVersion
+public partial class ChapterVersion
 {
     public int VersionId { get; set; }
 
-    public int? ProjectId { get; set; }
+    public int ChapterId { get; set; }
 
     public int VersionNumber { get; set; }
-
-    public string Title { get; set; }
-
-    public string FilePath { get; set; }
 
     public string RawContent { get; set; }
 
@@ -23,15 +19,13 @@ public partial class ManuscriptVersion
 
     public DateTime? UploadDate { get; set; }
 
-    public bool? IsPublished { get; set; }
+    public bool? IsActive { get; set; }
+
+    public virtual ICollection<Aijob> Aijobs { get; set; } = new List<Aijob>();
 
     public virtual ICollection<AnalysisReport> AnalysisReports { get; set; } = new List<AnalysisReport>();
 
-    public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
+    public virtual Chapter Chapter { get; set; }
 
     public virtual ICollection<ManuscriptChunk> ManuscriptChunks { get; set; } = new List<ManuscriptChunk>();
-
-    public virtual Project Project { get; set; }
-
-    public virtual ICollection<Publication> Publications { get; set; } = new List<Publication>();
 }

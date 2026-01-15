@@ -12,10 +12,11 @@ namespace RAG_AI_Reading.DTOs
         [Range(0, 999999999, ErrorMessage = "Giá phải từ 0 đến 999,999,999")]
         public decimal Price { get; set; }
 
-        [Range(0, 1000, ErrorMessage = "Số lượt phân tích phải từ 0 đến 1000")]
-        public int AnalysisLimit { get; set; }
+        [Range(0, 1000, ErrorMessage = "Số lượt phân tích tối đa phải từ 0 đến 1000")]
+        public int MaxAnalysisCount { get; set; }
 
-        public bool CanReadUnlimited { get; set; }
+        [Range(0, long.MaxValue, ErrorMessage = "Giới hạn token phải lớn hơn 0")]
+        public long MaxTokenLimit { get; set; }
 
         [MaxLength(500, ErrorMessage = "Mô tả không được vượt quá 500 ký tự")]
         public string? Description { get; set; }

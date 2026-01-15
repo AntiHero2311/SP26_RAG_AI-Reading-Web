@@ -9,9 +9,9 @@ public partial class UserSubscription
 {
     public int SubscriptionId { get; set; }
 
-    public int? UserId { get; set; }
+    public int UserId { get; set; }
 
-    public int? PlanId { get; set; }
+    public int PlanId { get; set; }
 
     public DateTime StartDate { get; set; }
 
@@ -19,9 +19,11 @@ public partial class UserSubscription
 
     public string Status { get; set; }
 
-    public DateTime CreatedAt { get; set; }
+    public int? UsedAnalysisCount { get; set; }
 
-    public DateTime UpdatedAt { get; set; }
+    public long? UsedTokens { get; set; }
+
+    public DateTime? CreatedAt { get; set; }
 
     public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
 

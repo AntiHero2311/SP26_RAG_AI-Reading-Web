@@ -21,7 +21,7 @@ public partial class User
 
     public bool? IsActive { get; set; }
 
-    public DateTime CreatedAt { get; set; }
+    public DateTime? CreatedAt { get; set; }
 
     public string RefreshToken { get; set; }
 
@@ -31,27 +31,17 @@ public partial class User
 
     public DateTime? PasswordResetTokenExpiryTime { get; set; }
 
-    public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
+    public virtual ICollection<Aijob> Aijobs { get; set; } = new List<Aijob>();
 
-    public virtual ICollection<Flag> FlagReporters { get; set; } = new List<Flag>();
+    public virtual ICollection<ChatSession> ChatSessions { get; set; } = new List<ChatSession>();
 
-    public virtual ICollection<Flag> FlagResolvedByNavigations { get; set; } = new List<Flag>();
-
-    public virtual ICollection<Follow> FollowAuthors { get; set; } = new List<Follow>();
-
-    public virtual ICollection<Follow> FollowFollowers { get; set; } = new List<Follow>();
+    public virtual ICollection<ImprovementSuggestion> ImprovementSuggestions { get; set; } = new List<ImprovementSuggestion>();
 
     public virtual ICollection<Project> Projects { get; set; } = new List<Project>();
-
-    public virtual ICollection<Rating> Ratings { get; set; } = new List<Rating>();
-
-    public virtual ICollection<ReadingHistory> ReadingHistories { get; set; } = new List<ReadingHistory>();
 
     public virtual ICollection<SystemConfig> SystemConfigs { get; set; } = new List<SystemConfig>();
 
     public virtual ICollection<SystemLog> SystemLogs { get; set; } = new List<SystemLog>();
-
-    public virtual ICollection<UserLibrary> UserLibraries { get; set; } = new List<UserLibrary>();
 
     public virtual ICollection<UserSubscription> UserSubscriptions { get; set; } = new List<UserSubscription>();
 }

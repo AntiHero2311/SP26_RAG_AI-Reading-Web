@@ -19,6 +19,10 @@
    "T4TemplatePath": null,
    "Tables": [
       {
+         "Name": "[dbo].[AIJobs]",
+         "ObjectType": 0
+      },
+      {
          "Name": "[dbo].[AnalysisReports]",
          "ObjectType": 0
       },
@@ -27,15 +31,19 @@
          "ObjectType": 0
       },
       {
-         "Name": "[dbo].[Comments]",
+         "Name": "[dbo].[ChapterVersions]",
          "ObjectType": 0
       },
       {
-         "Name": "[dbo].[Flags]",
+         "Name": "[dbo].[ChatMessages]",
          "ObjectType": 0
       },
       {
-         "Name": "[dbo].[Follows]",
+         "Name": "[dbo].[ChatSessions]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Genres]",
          "ObjectType": 0
       },
       {
@@ -47,27 +55,15 @@
          "ObjectType": 0
       },
       {
-         "Name": "[dbo].[ManuscriptVersions]",
-         "ObjectType": 0
-      },
-      {
          "Name": "[dbo].[Payments]",
          "ObjectType": 0
       },
       {
+         "Name": "[dbo].[ProjectGenres]",
+         "ObjectType": 0
+      },
+      {
          "Name": "[dbo].[Projects]",
-         "ObjectType": 0
-      },
-      {
-         "Name": "[dbo].[Publications]",
-         "ObjectType": 0
-      },
-      {
-         "Name": "[dbo].[Ratings]",
-         "ObjectType": 0
-      },
-      {
-         "Name": "[dbo].[ReadingHistory]",
          "ObjectType": 0
       },
       {
@@ -80,10 +76,6 @@
       },
       {
          "Name": "[dbo].[SystemLogs]",
-         "ObjectType": 0
-      },
-      {
-         "Name": "[dbo].[UserLibrary]",
          "ObjectType": 0
       },
       {

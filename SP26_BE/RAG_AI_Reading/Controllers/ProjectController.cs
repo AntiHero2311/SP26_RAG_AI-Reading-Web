@@ -29,7 +29,6 @@ namespace RAG_AI_Reading.Controllers
                 return BadRequest(ModelState);
             }
 
-            // Get userId from JWT token
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int authorId))
             {
@@ -39,7 +38,6 @@ namespace RAG_AI_Reading.Controllers
             var (success, message, project) = await _projectService.CreateProjectAsync(
                 authorId,
                 request.Title,
-                request.Genre,
                 request.Summary,
                 request.CoverImageUrl
             );
@@ -52,21 +50,17 @@ namespace RAG_AI_Reading.Controllers
             var response = new ProjectResponseDto
             {
                 ProjectId = project!.ProjectId,
-                AuthorId = project.AuthorId ?? 0,
+                AuthorId = project.AuthorId,
                 AuthorName = project.Author?.FullName ?? "",
                 Title = project.Title,
-                Genre = project.Genre,
                 Summary = project.Summary,
                 CoverImageUrl = project.CoverImageUrl,
                 Status = project.Status,
-                CreatedAt = project.CreatedAt,
+                CreatedAt = project.CreatedAt ?? DateTime.MinValue,
                 UpdatedAt = project.UpdatedAt,
-                TotalVersions = project.ManuscriptVersions?.Count ?? 0,
-                TotalComments = project.Comments?.Count ?? 0,
-                TotalRatings = project.Ratings?.Count ?? 0,
-                AverageRating = project.Ratings?.Any() == true 
-                    ? project.Ratings.Average(r => r.Score) 
-                    : 0
+                TotalChapters = project.Chapters?.Count ?? 0,
+                TotalChatSessions = project.ChatSessions?.Count ?? 0,
+                Genres = project.Genres?.Select(g => g.Name).ToList() ?? new List<string>()
             };
 
             return CreatedAtAction(nameof(GetProjectById), new { id = project.ProjectId }, new
@@ -82,7 +76,6 @@ namespace RAG_AI_Reading.Controllers
         [HttpGet("my-projects")]
         public async Task<IActionResult> GetMyProjects([FromQuery] bool includeDraft = true)
         {
-            // Get userId from JWT token
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int authorId))
             {
@@ -99,21 +92,17 @@ namespace RAG_AI_Reading.Controllers
             var projectList = projects.Select(p => new ProjectResponseDto
             {
                 ProjectId = p.ProjectId,
-                AuthorId = p.AuthorId ?? 0,
+                AuthorId = p.AuthorId,
                 AuthorName = p.Author?.FullName ?? "",
                 Title = p.Title,
-                Genre = p.Genre,
                 Summary = p.Summary,
                 CoverImageUrl = p.CoverImageUrl,
                 Status = p.Status,
-                CreatedAt = p.CreatedAt,
+                CreatedAt = p.CreatedAt ?? DateTime.MinValue,
                 UpdatedAt = p.UpdatedAt,
-                TotalVersions = p.ManuscriptVersions?.Count ?? 0,
-                TotalComments = p.Comments?.Count ?? 0,
-                TotalRatings = p.Ratings?.Count ?? 0,
-                AverageRating = p.Ratings?.Any() == true 
-                    ? p.Ratings.Average(r => r.Score) 
-                    : 0
+                TotalChapters = p.Chapters?.Count ?? 0,
+                TotalChatSessions = p.ChatSessions?.Count ?? 0,
+                Genres = p.Genres?.Select(g => g.Name).ToList() ?? new List<string>()
             }).ToList();
 
             return Ok(new
@@ -142,21 +131,17 @@ namespace RAG_AI_Reading.Controllers
             var response = new ProjectResponseDto
             {
                 ProjectId = project.ProjectId,
-                AuthorId = project.AuthorId ?? 0,
+                AuthorId = project.AuthorId,
                 AuthorName = project.Author?.FullName ?? "",
                 Title = project.Title,
-                Genre = project.Genre,
                 Summary = project.Summary,
                 CoverImageUrl = project.CoverImageUrl,
                 Status = project.Status,
-                CreatedAt = project.CreatedAt,
+                CreatedAt = project.CreatedAt ?? DateTime.MinValue,
                 UpdatedAt = project.UpdatedAt,
-                TotalVersions = project.ManuscriptVersions?.Count ?? 0,
-                TotalComments = project.Comments?.Count ?? 0,
-                TotalRatings = project.Ratings?.Count ?? 0,
-                AverageRating = project.Ratings?.Any() == true 
-                    ? project.Ratings.Average(r => r.Score) 
-                    : 0
+                TotalChapters = project.Chapters?.Count ?? 0,
+                TotalChatSessions = project.ChatSessions?.Count ?? 0,
+                Genres = project.Genres?.Select(g => g.Name).ToList() ?? new List<string>()
             };
 
             return Ok(new
@@ -177,7 +162,6 @@ namespace RAG_AI_Reading.Controllers
                 return BadRequest(ModelState);
             }
 
-            // Get userId from JWT token
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
             {
@@ -188,7 +172,6 @@ namespace RAG_AI_Reading.Controllers
                 id,
                 userId,
                 request.Title,
-                request.Genre,
                 request.Summary,
                 request.CoverImageUrl,
                 request.Status
@@ -202,21 +185,17 @@ namespace RAG_AI_Reading.Controllers
             var response = new ProjectResponseDto
             {
                 ProjectId = project!.ProjectId,
-                AuthorId = project.AuthorId ?? 0,
+                AuthorId = project.AuthorId,
                 AuthorName = project.Author?.FullName ?? "",
                 Title = project.Title,
-                Genre = project.Genre,
                 Summary = project.Summary,
                 CoverImageUrl = project.CoverImageUrl,
                 Status = project.Status,
-                CreatedAt = project.CreatedAt,
+                CreatedAt = project.CreatedAt ?? DateTime.MinValue,
                 UpdatedAt = project.UpdatedAt,
-                TotalVersions = project.ManuscriptVersions?.Count ?? 0,
-                TotalComments = project.Comments?.Count ?? 0,
-                TotalRatings = project.Ratings?.Count ?? 0,
-                AverageRating = project.Ratings?.Any() == true 
-                    ? project.Ratings.Average(r => r.Score) 
-                    : 0
+                TotalChapters = project.Chapters?.Count ?? 0,
+                TotalChatSessions = project.ChatSessions?.Count ?? 0,
+                Genres = project.Genres?.Select(g => g.Name).ToList() ?? new List<string>()
             };
 
             return Ok(new
@@ -232,7 +211,6 @@ namespace RAG_AI_Reading.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProject(int id)
         {
-            // Get userId from JWT token
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
             {

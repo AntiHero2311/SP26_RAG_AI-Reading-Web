@@ -36,7 +36,7 @@ namespace Service
             string planName,
             decimal price,
             int analysisLimit,
-            bool canReadUnlimited,
+            long tokenLimit,
             string? description)
         {
             if (string.IsNullOrWhiteSpace(planName))
@@ -53,8 +53,8 @@ namespace Service
             {
                 PlanName = planName.Trim(),
                 Price = price,
-                AnalysisLimit = analysisLimit,
-                CanReadUnlimited = canReadUnlimited,
+                MaxAnalysisCount = analysisLimit,
+                MaxTokenLimit = tokenLimit,
                 Description = description?.Trim(),
                 IsActive = true
             };
@@ -68,7 +68,7 @@ namespace Service
             string planName,
             decimal price,
             int analysisLimit,
-            bool canReadUnlimited,
+            int tokenLimit,
             string? description)
         {
             var plan = await _planRepository.GetByIdAsync(planId);
@@ -89,8 +89,8 @@ namespace Service
 
             plan.PlanName = planName.Trim();
             plan.Price = price;
-            plan.AnalysisLimit = analysisLimit;
-            plan.CanReadUnlimited = canReadUnlimited;
+            plan.MaxAnalysisCount = analysisLimit;
+            plan.MaxTokenLimit = tokenLimit ;
             plan.Description = description?.Trim();
 
             var updatedPlan = await _planRepository.UpdateAsync(plan);

@@ -13,13 +13,9 @@ public partial class ManuscriptChunk
 
     public int? ChunkIndex { get; set; }
 
-    public int? StartCharIndex { get; set; }
-
-    public int? EndCharIndex { get; set; }
-
     public string ContentText { get; set; }
 
     public string VectorId { get; set; }
 
-    public virtual ManuscriptVersion Version { get; set; }
+    public virtual ChapterVersion Version { get; set; }
 }

@@ -5,17 +5,19 @@ using System.Collections.Generic;
 
 namespace Repository.Models;
 
-public partial class UserLibrary
+public partial class ChatSession
 {
-    public int LibraryId { get; set; }
+    public int SessionId { get; set; }
 
-    public int? UserId { get; set; }
+    public int UserId { get; set; }
 
     public int? ProjectId { get; set; }
 
-    public string Status { get; set; }
+    public string Title { get; set; }
 
-    public DateTime? LastAccessDate { get; set; }
+    public DateTime? CreatedAt { get; set; }
+
+    public virtual ICollection<ChatMessage> ChatMessages { get; set; } = new List<ChatMessage>();
 
     public virtual Project Project { get; set; }
 

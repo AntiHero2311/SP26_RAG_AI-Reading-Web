@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Repository.Models;
 
 namespace Repository
@@ -21,6 +21,12 @@ namespace Repository
         {
             _context.Projects.Add(project);
             await _context.SaveChangesAsync();
+            
+            // ✅ Load Author relationship sau khi save
+            await _context.Entry(project)
+                .Reference(p => p.Author)
+                .LoadAsync();
+            
             return project;
         }
 
@@ -28,14 +34,14 @@ namespace Repository
         {
             var query = _context.Projects
                 .Include(p => p.Author)
-                .Include(p => p.ManuscriptVersions)
-                .Include(p => p.Comments)
-                .Include(p => p.Ratings)
+                .Include(p => p.Chapters)
+                .Include(p => p.ChatSessions)
+                .Include(p => p.Genres)
                 .AsTracking();
 
             if (!includeDeleted)
             {
-                query = query.Where(p => !p.IsDeleted);
+                query = query.Where(p => p.IsDeleted != true);
             }
 
             return await query.FirstOrDefaultAsync(p => p.ProjectId == projectId);
@@ -44,10 +50,11 @@ namespace Repository
         public async Task<List<Project>> GetByAuthorIdAsync(int authorId, bool includeDraft = true)
         {
             var query = _context.Projects
-                .Include(p => p.ManuscriptVersions)
-                .Include(p => p.Comments)
-                .Include(p => p.Ratings)
-                .Where(p => p.AuthorId == authorId && !p.IsDeleted)
+                .Include(p => p.Author)
+                .Include(p => p.Chapters)
+                .Include(p => p.ChatSessions)
+                .Include(p => p.Genres)
+                .Where(p => p.AuthorId == authorId && p.IsDeleted != true)
                 .AsNoTracking();
 
             if (!includeDraft)
@@ -73,6 +80,21 @@ namespace Repository
             project.UpdatedAt = DateTime.UtcNow;
             _context.Projects.Update(project);
             await _context.SaveChangesAsync();
+            
+            // ✅ Load relationships sau khi update
+            await _context.Entry(project)
+                .Reference(p => p.Author)
+                .LoadAsync();
+            await _context.Entry(project)
+                .Collection(p => p.Chapters)
+                .LoadAsync();
+            await _context.Entry(project)
+                .Collection(p => p.ChatSessions)
+                .LoadAsync();
+            await _context.Entry(project)
+                .Collection(p => p.Genres)
+                .LoadAsync();
+            
             return project;
         }
 

@@ -7,7 +7,7 @@ namespace RAG_AI_Reading.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Admin")] // Chỉ Admin mới truy cập được
+    [Authorize(Roles = "Admin")]
     public class AdminController : ControllerBase
     {
         private readonly AdminService _adminService;
@@ -17,14 +17,6 @@ namespace RAG_AI_Reading.Controllers
             _adminService = new AdminService();
         }
 
-        /// <summary>
-        /// Xem danh sách người dùng (Chỉ Admin)
-        /// </summary>
-        /// <param name="pageNumber">Trang số (mặc định: 1)</param>
-        /// <param name="pageSize">Số lượng mỗi trang (mặc định: 10, max: 100)</param>
-        /// <param name="searchTerm">Tìm kiếm theo tên hoặc email</param>
-        /// <param name="role">Lọc theo role (User, Admin, Author...)</param>
-        /// <param name="includeInactive">Bao gồm cả user đã bị vô hiệu hóa</param>
         [HttpGet("users")]
         public async Task<IActionResult> GetAllUsers(
             [FromQuery] int pageNumber = 1,
@@ -54,11 +46,11 @@ namespace RAG_AI_Reading.Controllers
                 AvatarUrl = u.AvatarUrl,
                 Role = u.Role,
                 IsActive = u.IsActive ?? true,
-                CreatedAt = u.CreatedAt,
+                CreatedAt = u.CreatedAt ?? DateTime.MinValue,
                 TotalProjects = u.Projects?.Count ?? 0,
-                TotalComments = u.Comments?.Count ?? 0,
-                TotalFollowers = u.FollowAuthors?.Count ?? 0,
-                TotalFollowing = u.FollowFollowers?.Count ?? 0
+                TotalComments = 0, // ❌ Bỏ vì không còn relationship
+                TotalFollowers = 0, // ❌ Bỏ vì không còn relationship
+                TotalFollowing = 0  // ❌ Bỏ vì không còn relationship
             }).ToList();
 
             return Ok(new

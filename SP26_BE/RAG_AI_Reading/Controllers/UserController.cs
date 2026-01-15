@@ -8,7 +8,7 @@ namespace RAG_AI_Reading.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize] // Yêu cầu authentication cho tất cả endpoints
+    [Authorize]
     public class UserController : ControllerBase
     {
         private readonly UserService _userService;
@@ -18,13 +18,9 @@ namespace RAG_AI_Reading.Controllers
             _userService = new UserService();
         }
 
-        /// <summary>
-        /// Lấy thông tin cá nhân hiện tại
-        /// </summary>
         [HttpGet("profile")]
         public async Task<IActionResult> GetProfile()
         {
-            // Lấy userId từ JWT token
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
@@ -46,7 +42,7 @@ namespace RAG_AI_Reading.Controllers
                 Email = user.Email,
                 AvatarUrl = user.AvatarUrl,
                 Role = user.Role,
-                CreatedAt = user.CreatedAt,
+                CreatedAt = user.CreatedAt ?? DateTime.MinValue,
                 IsActive = user.IsActive ?? true
             };
 
@@ -57,9 +53,6 @@ namespace RAG_AI_Reading.Controllers
             });
         }
 
-        /// <summary>
-        /// Cập nhật thông tin cá nhân (Tên, Avatar)
-        /// </summary>
         [HttpPut("profile")]
         public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequestDto request)
         {
@@ -68,7 +61,6 @@ namespace RAG_AI_Reading.Controllers
                 return BadRequest(ModelState);
             }
 
-            // Lấy userId từ JWT token
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
@@ -94,7 +86,7 @@ namespace RAG_AI_Reading.Controllers
                 Email = user.Email,
                 AvatarUrl = user.AvatarUrl,
                 Role = user.Role,
-                CreatedAt = user.CreatedAt,
+                CreatedAt = user.CreatedAt ?? DateTime.MinValue,
                 IsActive = user.IsActive ?? true
             };
 

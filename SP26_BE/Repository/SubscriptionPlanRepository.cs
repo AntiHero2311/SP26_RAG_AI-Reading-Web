@@ -25,7 +25,7 @@ namespace Repository
 
             if (!includeInactive)
             {
-                query = query.Where(p => p.IsActive);
+                query = query.Where(p => p.IsActive == true);
             }
 
             return await query

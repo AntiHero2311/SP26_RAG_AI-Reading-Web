@@ -18,31 +18,27 @@ public partial class StoryAI_DBContext : DbContext
     {
     }
 
+    public virtual DbSet<Aijob> Aijobs { get; set; }
+
     public virtual DbSet<AnalysisReport> AnalysisReports { get; set; }
 
     public virtual DbSet<Chapter> Chapters { get; set; }
 
-    public virtual DbSet<Comment> Comments { get; set; }
+    public virtual DbSet<ChapterVersion> ChapterVersions { get; set; }
 
-    public virtual DbSet<Flag> Flags { get; set; }
+    public virtual DbSet<ChatMessage> ChatMessages { get; set; }
 
-    public virtual DbSet<Follow> Follows { get; set; }
+    public virtual DbSet<ChatSession> ChatSessions { get; set; }
+
+    public virtual DbSet<Genre> Genres { get; set; }
 
     public virtual DbSet<ImprovementSuggestion> ImprovementSuggestions { get; set; }
 
     public virtual DbSet<ManuscriptChunk> ManuscriptChunks { get; set; }
 
-    public virtual DbSet<ManuscriptVersion> ManuscriptVersions { get; set; }
-
     public virtual DbSet<Payment> Payments { get; set; }
 
     public virtual DbSet<Project> Projects { get; set; }
-
-    public virtual DbSet<Publication> Publications { get; set; }
-
-    public virtual DbSet<Rating> Ratings { get; set; }
-
-    public virtual DbSet<ReadingHistory> ReadingHistories { get; set; }
 
     public virtual DbSet<SubscriptionPlan> SubscriptionPlans { get; set; }
 
@@ -51,8 +47,6 @@ public partial class StoryAI_DBContext : DbContext
     public virtual DbSet<SystemLog> SystemLogs { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
-
-    public virtual DbSet<UserLibrary> UserLibraries { get; set; }
 
     public virtual DbSet<UserSubscription> UserSubscriptions { get; set; }
 
@@ -71,135 +65,148 @@ public partial class StoryAI_DBContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Aijob>(entity =>
+        {
+            entity.HasKey(e => e.JobId).HasName("PK__AIJobs__056690E2A458DE49");
+
+            entity.ToTable("AIJobs");
+
+            entity.HasIndex(e => e.Status, "IX_AIJobs_Status");
+
+            entity.Property(e => e.JobId)
+                .HasDefaultValueSql("(newid())")
+                .HasColumnName("JobID");
+            entity.Property(e => e.Progress).HasDefaultValue(0.0);
+            entity.Property(e => e.ResultReportId).HasColumnName("ResultReportID");
+            entity.Property(e => e.StartedAt).HasDefaultValueSql("(sysutcdatetime())");
+            entity.Property(e => e.Status)
+                .HasMaxLength(20)
+                .IsUnicode(false)
+                .HasDefaultValue("Pending");
+            entity.Property(e => e.UserId).HasColumnName("UserID");
+            entity.Property(e => e.VersionId).HasColumnName("VersionID");
+
+            entity.HasOne(d => d.User).WithMany(p => p.Aijobs)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__AIJobs__UserID__52593CB8");
+
+            entity.HasOne(d => d.Version).WithMany(p => p.Aijobs)
+                .HasForeignKey(d => d.VersionId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__AIJobs__VersionI__5165187F");
+        });
+
         modelBuilder.Entity<AnalysisReport>(entity =>
         {
-            entity.HasKey(e => e.ReportId).HasName("PK__Analysis__D5BD48E5E2901892");
-
-            entity.HasIndex(e => e.VersionId, "IX_AnalysisReports_Version");
+            entity.HasKey(e => e.ReportId).HasName("PK__Analysis__D5BD48E5F8C13B2C");
 
             entity.Property(e => e.ReportId).HasColumnName("ReportID");
             entity.Property(e => e.AnalysisDataJson).HasColumnName("AnalysisDataJSON");
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
             entity.Property(e => e.VersionId).HasColumnName("VersionID");
 
             entity.HasOne(d => d.Version).WithMany(p => p.AnalysisReports)
                 .HasForeignKey(d => d.VersionId)
                 .OnDelete(DeleteBehavior.Cascade)
-                .HasConstraintName("FK__AnalysisR__Versi__5441852A");
+                .HasConstraintName("FK__AnalysisR__Versi__59063A47");
         });
 
         modelBuilder.Entity<Chapter>(entity =>
         {
-            entity.HasKey(e => e.ChapterId).HasName("PK__Chapters__0893A34A207B002F");
+            entity.HasKey(e => e.ChapterId).HasName("PK__Chapters__0893A34A000E9D05");
 
-            entity.HasIndex(e => new { e.PublicationId, e.ChapterNo }, "IX_Chapters_Pub_No");
-
-            entity.HasIndex(e => new { e.PublicationId, e.ChapterNo }, "UQ_Pub_Chapter").IsUnique();
+            entity.HasIndex(e => new { e.ProjectId, e.ChapterNo }, "UQ_Project_Chapter").IsUnique();
 
             entity.Property(e => e.ChapterId).HasColumnName("ChapterID");
-            entity.Property(e => e.ContentRef).HasMaxLength(500);
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
-            entity.Property(e => e.PublicationId).HasColumnName("PublicationID");
-            entity.Property(e => e.Title).HasMaxLength(255);
-            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("(sysutcdatetime())");
-
-            entity.HasOne(d => d.Publication).WithMany(p => p.Chapters)
-                .HasForeignKey(d => d.PublicationId)
-                .HasConstraintName("FK__Chapters__Public__4F7CD00D");
-        });
-
-        modelBuilder.Entity<Comment>(entity =>
-        {
-            entity.HasKey(e => e.CommentId).HasName("PK__Comments__C3B4DFAA7FFF51C0");
-
-            entity.HasIndex(e => e.ParentCommentId, "IX_Comments_Parent");
-
-            entity.HasIndex(e => e.ProjectId, "IX_Comments_Project");
-
-            entity.HasIndex(e => e.VersionId, "IX_Comments_Version");
-
-            entity.Property(e => e.CommentId).HasColumnName("CommentID");
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(getdate())");
-            entity.Property(e => e.ParentCommentId).HasColumnName("ParentCommentID");
             entity.Property(e => e.ProjectId).HasColumnName("ProjectID");
-            entity.Property(e => e.UserId).HasColumnName("UserID");
-            entity.Property(e => e.VersionId).HasColumnName("VersionID");
+            entity.Property(e => e.Title).HasMaxLength(255);
 
-            entity.HasOne(d => d.Project).WithMany(p => p.Comments)
+            entity.HasOne(d => d.Project).WithMany(p => p.Chapters)
                 .HasForeignKey(d => d.ProjectId)
-                .HasConstraintName("FK__Comments__Projec__70DDC3D8");
-
-            entity.HasOne(d => d.User).WithMany(p => p.Comments)
-                .HasForeignKey(d => d.UserId)
-                .HasConstraintName("FK__Comments__UserID__6FE99F9F");
-
-            entity.HasOne(d => d.Version).WithMany(p => p.Comments)
-                .HasForeignKey(d => d.VersionId)
-                .HasConstraintName("FK__Comments__Versio__71D1E811");
+                .HasConstraintName("FK__Chapters__Projec__46E78A0C");
         });
 
-        modelBuilder.Entity<Flag>(entity =>
+        modelBuilder.Entity<ChapterVersion>(entity =>
         {
-            entity.HasKey(e => e.FlagId).HasName("PK__Flags__780D45B30783373D");
+            entity.HasKey(e => e.VersionId).HasName("PK__ChapterV__16C6402FD6FFC370");
 
-            entity.HasIndex(e => e.Status, "IX_Flags_Status");
+            entity.HasIndex(e => new { e.ChapterId, e.VersionNumber }, "UQ_Chapter_Version").IsUnique();
 
-            entity.Property(e => e.FlagId).HasColumnName("FlagID");
+            entity.Property(e => e.VersionId).HasColumnName("VersionID");
+            entity.Property(e => e.ChapterId).HasColumnName("ChapterID");
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.UploadDate).HasDefaultValueSql("(sysutcdatetime())");
+
+            entity.HasOne(d => d.Chapter).WithMany(p => p.ChapterVersions)
+                .HasForeignKey(d => d.ChapterId)
+                .HasConstraintName("FK__ChapterVe__Chapt__4BAC3F29");
+        });
+
+        modelBuilder.Entity<ChatMessage>(entity =>
+        {
+            entity.HasKey(e => e.MessageId).HasName("PK__ChatMess__C87C037CC3CDCFA4");
+
+            entity.HasIndex(e => e.SessionId, "IX_ChatMessages_Session");
+
+            entity.Property(e => e.MessageId).HasColumnName("MessageID");
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
-            entity.Property(e => e.ReporterId).HasColumnName("ReporterID");
-            entity.Property(e => e.Status)
-                .IsRequired()
-                .HasMaxLength(20)
-                .IsUnicode(false)
-                .HasDefaultValue("Pending");
-            entity.Property(e => e.TargetId).HasColumnName("TargetID");
-            entity.Property(e => e.TargetType)
-                .IsRequired()
+            entity.Property(e => e.ReferenceChunkIds).HasColumnName("ReferenceChunkIDs");
+            entity.Property(e => e.Sender)
                 .HasMaxLength(20)
                 .IsUnicode(false);
+            entity.Property(e => e.SessionId).HasColumnName("SessionID");
 
-            entity.HasOne(d => d.Reporter).WithMany(p => p.FlagReporters)
-                .HasForeignKey(d => d.ReporterId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Flags__ReporterI__7D439ABD");
-
-            entity.HasOne(d => d.ResolvedByNavigation).WithMany(p => p.FlagResolvedByNavigations)
-                .HasForeignKey(d => d.ResolvedBy)
-                .HasConstraintName("FK__Flags__ResolvedB__02084FDA");
+            entity.HasOne(d => d.Session).WithMany(p => p.ChatMessages)
+                .HasForeignKey(d => d.SessionId)
+                .HasConstraintName("FK__ChatMessa__Sessi__6B24EA82");
         });
 
-        modelBuilder.Entity<Follow>(entity =>
+        modelBuilder.Entity<ChatSession>(entity =>
         {
-            entity.HasKey(e => e.FollowId).HasName("PK__Follows__2CE8108EA6654713");
+            entity.HasKey(e => e.SessionId).HasName("PK__ChatSess__C9F492706F44B305");
 
-            entity.HasIndex(e => e.AuthorId, "IX_Follows_Author");
+            entity.HasIndex(e => e.ProjectId, "IX_ChatSessions_Project");
 
-            entity.HasIndex(e => e.FollowerId, "IX_Follows_Follower");
+            entity.HasIndex(e => e.UserId, "IX_ChatSessions_User");
 
-            entity.HasIndex(e => new { e.FollowerId, e.AuthorId }, "UQ_Follow").IsUnique();
-
-            entity.Property(e => e.FollowId).HasColumnName("FollowID");
-            entity.Property(e => e.AuthorId).HasColumnName("AuthorID");
+            entity.Property(e => e.SessionId).HasColumnName("SessionID");
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
-            entity.Property(e => e.FollowerId).HasColumnName("FollowerID");
+            entity.Property(e => e.ProjectId).HasColumnName("ProjectID");
+            entity.Property(e => e.Title).HasMaxLength(200);
+            entity.Property(e => e.UserId).HasColumnName("UserID");
 
-            entity.HasOne(d => d.Author).WithMany(p => p.FollowAuthors)
-                .HasForeignKey(d => d.AuthorId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Follows__AuthorI__6C190EBB");
+            entity.HasOne(d => d.Project).WithMany(p => p.ChatSessions)
+                .HasForeignKey(d => d.ProjectId)
+                .HasConstraintName("FK__ChatSessi__Proje__6754599E");
 
-            entity.HasOne(d => d.Follower).WithMany(p => p.FollowFollowers)
-                .HasForeignKey(d => d.FollowerId)
+            entity.HasOne(d => d.User).WithMany(p => p.ChatSessions)
+                .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Follows__Followe__6B24EA82");
+                .HasConstraintName("FK__ChatSessi__UserI__66603565");
+        });
+
+        modelBuilder.Entity<Genre>(entity =>
+        {
+            entity.HasKey(e => e.GenreId).HasName("PK__Genres__0385055E8F4052AA");
+
+            entity.HasIndex(e => e.Name, "UQ__Genres__737584F64EBE0723").IsUnique();
+
+            entity.Property(e => e.GenreId).HasColumnName("GenreID");
+            entity.Property(e => e.Name)
+                .IsRequired()
+                .HasMaxLength(100);
         });
 
         modelBuilder.Entity<ImprovementSuggestion>(entity =>
         {
-            entity.HasKey(e => e.SuggestionId).HasName("PK__Improvem__9409952881246059");
+            entity.HasKey(e => e.SuggestionId).HasName("PK__Improvem__9409952884B8651D");
 
             entity.Property(e => e.SuggestionId).HasColumnName("SuggestionID");
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
+            entity.Property(e => e.CreatorId).HasColumnName("CreatorID");
+            entity.Property(e => e.IsResolved).HasDefaultValue(false);
             entity.Property(e => e.ReportId).HasColumnName("ReportID");
             entity.Property(e => e.Severity)
                 .HasMaxLength(20)
@@ -208,17 +215,19 @@ public partial class StoryAI_DBContext : DbContext
                 .HasMaxLength(50)
                 .IsUnicode(false);
 
+            entity.HasOne(d => d.Creator).WithMany(p => p.ImprovementSuggestions)
+                .HasForeignKey(d => d.CreatorId)
+                .HasConstraintName("FK__Improveme__Creat__5FB337D6");
+
             entity.HasOne(d => d.Report).WithMany(p => p.ImprovementSuggestions)
                 .HasForeignKey(d => d.ReportId)
                 .OnDelete(DeleteBehavior.Cascade)
-                .HasConstraintName("FK__Improveme__Repor__5812160E");
+                .HasConstraintName("FK__Improveme__Repor__5CD6CB2B");
         });
 
         modelBuilder.Entity<ManuscriptChunk>(entity =>
         {
-            entity.HasKey(e => e.ChunkId).HasName("PK__Manuscri__FBFF9D20DBA82673");
-
-            entity.HasIndex(e => new { e.VersionId, e.ChunkIndex }, "IX_Chunks_Version");
+            entity.HasKey(e => e.ChunkId).HasName("PK__Manuscri__FBFF9D204E565158");
 
             entity.HasIndex(e => new { e.VersionId, e.ChunkIndex }, "UQ_Version_Chunk").IsUnique();
 
@@ -232,33 +241,16 @@ public partial class StoryAI_DBContext : DbContext
             entity.HasOne(d => d.Version).WithMany(p => p.ManuscriptChunks)
                 .HasForeignKey(d => d.VersionId)
                 .OnDelete(DeleteBehavior.Cascade)
-                .HasConstraintName("FK__Manuscrip__Versi__5CD6CB2B");
-        });
-
-        modelBuilder.Entity<ManuscriptVersion>(entity =>
-        {
-            entity.HasKey(e => e.VersionId).HasName("PK__Manuscri__16C6402FCD8BF6B6");
-
-            entity.HasIndex(e => new { e.ProjectId, e.VersionNumber }, "IX_Versions_ProjectVer");
-
-            entity.HasIndex(e => new { e.ProjectId, e.VersionNumber }, "UQ_Project_Version").IsUnique();
-
-            entity.Property(e => e.VersionId).HasColumnName("VersionID");
-            entity.Property(e => e.FilePath).HasMaxLength(500);
-            entity.Property(e => e.IsPublished).HasDefaultValue(false);
-            entity.Property(e => e.ProjectId).HasColumnName("ProjectID");
-            entity.Property(e => e.Title).HasMaxLength(200);
-            entity.Property(e => e.UploadDate).HasDefaultValueSql("(getdate())");
-
-            entity.HasOne(d => d.Project).WithMany(p => p.ManuscriptVersions)
-                .HasForeignKey(d => d.ProjectId)
-                .OnDelete(DeleteBehavior.Cascade)
-                .HasConstraintName("FK__Manuscrip__Proje__440B1D61");
+                .HasConstraintName("FK__Manuscrip__Versi__6383C8BA");
         });
 
         modelBuilder.Entity<Payment>(entity =>
         {
-            entity.HasKey(e => e.PaymentId).HasName("PK__Payments__9B556A586FE18F97");
+            entity.HasKey(e => e.PaymentId).HasName("PK__Payments__9B556A58C09F9DE0");
+
+            entity.HasIndex(e => e.CreatedAt, "IX_Payments_Date");
+
+            entity.HasIndex(e => e.Status, "IX_Payments_Status");
 
             entity.HasIndex(e => e.SubscriptionId, "IX_Payments_Sub");
 
@@ -266,34 +258,30 @@ public partial class StoryAI_DBContext : DbContext
             entity.Property(e => e.Amount).HasColumnType("decimal(18, 2)");
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
             entity.Property(e => e.Currency)
-                .IsRequired()
                 .HasMaxLength(3)
                 .IsUnicode(false)
                 .HasDefaultValue("VND")
                 .IsFixedLength();
+            entity.Property(e => e.Note).HasMaxLength(500);
             entity.Property(e => e.Provider).HasMaxLength(50);
             entity.Property(e => e.ProviderTxnId)
                 .HasMaxLength(255)
                 .HasColumnName("ProviderTxnID");
             entity.Property(e => e.Status)
-                .IsRequired()
                 .HasMaxLength(20)
-                .IsUnicode(false);
+                .IsUnicode(false)
+                .HasDefaultValue("Pending");
             entity.Property(e => e.SubscriptionId).HasColumnName("SubscriptionID");
 
             entity.HasOne(d => d.Subscription).WithMany(p => p.Payments)
                 .HasForeignKey(d => d.SubscriptionId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Payments__Subscr__36B12243");
+                .HasConstraintName("FK__Payments__Subscr__778AC167");
         });
 
         modelBuilder.Entity<Project>(entity =>
         {
-            entity.HasKey(e => e.ProjectId).HasName("PK__Projects__761ABED0ADC79AEE");
-
-            entity.HasIndex(e => new { e.AuthorId, e.Status }, "IX_Projects_Author_Status");
-
-            entity.HasIndex(e => e.IsDeleted, "IX_Projects_IsDeleted");
+            entity.HasKey(e => e.ProjectId).HasName("PK__Projects__761ABED0464932A9");
 
             entity.Property(e => e.ProjectId).HasColumnName("ProjectID");
             entity.Property(e => e.AuthorId).HasColumnName("AuthorID");
@@ -301,7 +289,7 @@ public partial class StoryAI_DBContext : DbContext
                 .HasMaxLength(500)
                 .HasColumnName("CoverImageURL");
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
-            entity.Property(e => e.Genre).HasMaxLength(50);
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
             entity.Property(e => e.Status)
                 .HasMaxLength(20)
                 .IsUnicode(false)
@@ -312,136 +300,84 @@ public partial class StoryAI_DBContext : DbContext
 
             entity.HasOne(d => d.Author).WithMany(p => p.Projects)
                 .HasForeignKey(d => d.AuthorId)
-                .HasConstraintName("FK__Projects__Author__3C69FB99");
-        });
-
-        modelBuilder.Entity<Publication>(entity =>
-        {
-            entity.HasKey(e => e.PublicationId).HasName("PK__Publicat__05E6DC5818900D52");
-
-            entity.HasIndex(e => e.ProjectId, "IX_Pubs_Project");
-
-            entity.Property(e => e.PublicationId).HasColumnName("PublicationID");
-            entity.Property(e => e.IsActive).HasDefaultValue(true);
-            entity.Property(e => e.ProjectId).HasColumnName("ProjectID");
-            entity.Property(e => e.PublishedAt).HasDefaultValueSql("(sysutcdatetime())");
-            entity.Property(e => e.VersionId).HasColumnName("VersionID");
-
-            entity.HasOne(d => d.Project).WithMany(p => p.Publications)
-                .HasForeignKey(d => d.ProjectId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Publicati__Proje__48CFD27E");
+                .HasConstraintName("FK__Projects__Author__3B75D760");
 
-            entity.HasOne(d => d.Version).WithMany(p => p.Publications)
-                .HasForeignKey(d => d.VersionId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Publicati__Versi__49C3F6B7");
-        });
-
-        modelBuilder.Entity<Rating>(entity =>
-        {
-            entity.HasKey(e => e.RatingId).HasName("PK__Ratings__FCCDF85C51B75730");
-
-            entity.HasIndex(e => e.ProjectId, "IX_Ratings_Project");
-
-            entity.HasIndex(e => new { e.UserId, e.ProjectId }, "UQ_Rating").IsUnique();
-
-            entity.Property(e => e.RatingId).HasColumnName("RatingID");
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
-            entity.Property(e => e.ProjectId).HasColumnName("ProjectID");
-            entity.Property(e => e.UserId).HasColumnName("UserID");
-
-            entity.HasOne(d => d.Project).WithMany(p => p.Ratings)
-                .HasForeignKey(d => d.ProjectId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Ratings__Project__787EE5A0");
-
-            entity.HasOne(d => d.User).WithMany(p => p.Ratings)
-                .HasForeignKey(d => d.UserId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Ratings__UserID__778AC167");
-        });
-
-        modelBuilder.Entity<ReadingHistory>(entity =>
-        {
-            entity.HasKey(e => e.HistoryId).HasName("PK__ReadingH__4D7B4ADD017433E6");
-
-            entity.ToTable("ReadingHistory");
-
-            entity.HasIndex(e => new { e.UserId, e.ProjectId }, "IX_ReadingHistory_UserProject");
-
-            entity.Property(e => e.HistoryId).HasColumnName("HistoryID");
-            entity.Property(e => e.LastReadTime).HasDefaultValueSql("(getdate())");
-            entity.Property(e => e.LastVersionId).HasColumnName("LastVersionID");
-            entity.Property(e => e.ProjectId).HasColumnName("ProjectID");
-            entity.Property(e => e.UserId).HasColumnName("UserID");
-
-            entity.HasOne(d => d.Project).WithMany(p => p.ReadingHistories)
-                .HasForeignKey(d => d.ProjectId)
-                .HasConstraintName("FK__ReadingHi__Proje__66603565");
-
-            entity.HasOne(d => d.User).WithMany(p => p.ReadingHistories)
-                .HasForeignKey(d => d.UserId)
-                .HasConstraintName("FK__ReadingHi__UserI__656C112C");
+            entity.HasMany(d => d.Genres).WithMany(p => p.Projects)
+                .UsingEntity<Dictionary<string, object>>(
+                    "ProjectGenre",
+                    r => r.HasOne<Genre>().WithMany()
+                        .HasForeignKey("GenreId")
+                        .HasConstraintName("FK__ProjectGe__Genre__4316F928"),
+                    l => l.HasOne<Project>().WithMany()
+                        .HasForeignKey("ProjectId")
+                        .HasConstraintName("FK__ProjectGe__Proje__4222D4EF"),
+                    j =>
+                    {
+                        j.HasKey("ProjectId", "GenreId");
+                        j.ToTable("ProjectGenres");
+                        j.IndexerProperty<int>("ProjectId").HasColumnName("ProjectID");
+                        j.IndexerProperty<int>("GenreId").HasColumnName("GenreID");
+                    });
         });
 
         modelBuilder.Entity<SubscriptionPlan>(entity =>
         {
-            entity.HasKey(e => e.PlanId).HasName("PK__Subscrip__755C22D7F7DA6493");
+            entity.HasKey(e => e.PlanId).HasName("PK__Subscrip__755C22D73FD259F3");
 
             entity.Property(e => e.PlanId).HasColumnName("PlanID");
-            entity.Property(e => e.AnalysisLimit).HasDefaultValue(5);
-            entity.Property(e => e.CanReadUnlimited).HasDefaultValue(false);
             entity.Property(e => e.Description).HasMaxLength(500);
             entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.MaxAnalysisCount).HasDefaultValue(10);
+            entity.Property(e => e.MaxTokenLimit).HasDefaultValue(50000L);
             entity.Property(e => e.PlanName)
                 .IsRequired()
                 .HasMaxLength(50);
-            entity.Property(e => e.Price).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.Price)
+                .HasDefaultValue(0m)
+                .HasColumnType("decimal(18, 2)");
         });
 
         modelBuilder.Entity<SystemConfig>(entity =>
         {
-            entity.HasKey(e => e.ConfigKey).HasName("PK__SystemCo__4A306785EE70BAD4");
+            entity.HasKey(e => e.ConfigKey).HasName("PK__SystemCo__4A306785B5C41F25");
 
             entity.Property(e => e.ConfigKey)
                 .HasMaxLength(50)
                 .IsUnicode(false);
             entity.Property(e => e.ConfigValue).HasMaxLength(255);
-            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("(sysutcdatetime())");
 
             entity.HasOne(d => d.LastUpdatedByNavigation).WithMany(p => p.SystemConfigs)
                 .HasForeignKey(d => d.LastUpdatedBy)
-                .HasConstraintName("FK__SystemCon__LastU__08B54D69");
+                .HasConstraintName("FK__SystemCon__LastU__73BA3083");
         });
 
         modelBuilder.Entity<SystemLog>(entity =>
         {
-            entity.HasKey(e => e.LogId).HasName("PK__SystemLo__5E5499A8B471E073");
+            entity.HasKey(e => e.LogId).HasName("PK__SystemLo__5E5499A8A9DC10C9");
 
             entity.Property(e => e.LogId).HasColumnName("LogID");
             entity.Property(e => e.ActionType)
                 .HasMaxLength(50)
                 .IsUnicode(false);
             entity.Property(e => e.ActorId).HasColumnName("ActorID");
-            entity.Property(e => e.Timestamp).HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.Timestamp).HasDefaultValueSql("(sysutcdatetime())");
 
             entity.HasOne(d => d.Actor).WithMany(p => p.SystemLogs)
                 .HasForeignKey(d => d.ActorId)
-                .HasConstraintName("FK__SystemLog__Actor__04E4BC85");
+                .HasConstraintName("FK__SystemLog__Actor__6FE99F9F");
         });
 
         modelBuilder.Entity<User>(entity =>
         {
-            entity.HasKey(e => e.UserId).HasName("PK__Users__1788CCACD24D46D1");
+            entity.HasKey(e => e.UserId).HasName("PK__Users__1788CCACF2965DA6");
 
             entity.HasIndex(e => e.Email, "IX_Users_Email");
 
-            entity.HasIndex(e => e.IsActive, "IX_Users_IsActive");
-
             entity.HasIndex(e => e.Role, "IX_Users_Role");
 
-            entity.HasIndex(e => e.Email, "UQ__Users__A9D105341D3C6240").IsUnique();
+            entity.HasIndex(e => e.Email, "UQ__Users__A9D10534C263D021").IsUnique();
 
             entity.Property(e => e.UserId).HasColumnName("UserID");
             entity.Property(e => e.AvatarUrl)
@@ -450,49 +386,23 @@ public partial class StoryAI_DBContext : DbContext
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
             entity.Property(e => e.Email)
                 .IsRequired()
-                .HasMaxLength(100)
-                .IsUnicode(false);
+                .HasMaxLength(100);
             entity.Property(e => e.FullName)
                 .IsRequired()
                 .HasMaxLength(100);
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.PasswordHash)
                 .IsRequired()
-                .HasMaxLength(255)
-                .IsUnicode(false);
+                .HasMaxLength(255);
             entity.Property(e => e.Role)
+                .IsRequired()
                 .HasMaxLength(20)
                 .IsUnicode(false);
-        });
-
-        modelBuilder.Entity<UserLibrary>(entity =>
-        {
-            entity.HasKey(e => e.LibraryId).HasName("PK__UserLibr__A13647BFDA74FAD0");
-
-            entity.ToTable("UserLibrary");
-
-            entity.HasIndex(e => e.UserId, "IX_Library_User");
-
-            entity.Property(e => e.LibraryId).HasColumnName("LibraryID");
-            entity.Property(e => e.LastAccessDate).HasDefaultValueSql("(getdate())");
-            entity.Property(e => e.ProjectId).HasColumnName("ProjectID");
-            entity.Property(e => e.Status)
-                .HasMaxLength(20)
-                .HasDefaultValue("Reading");
-            entity.Property(e => e.UserId).HasColumnName("UserID");
-
-            entity.HasOne(d => d.Project).WithMany(p => p.UserLibraries)
-                .HasForeignKey(d => d.ProjectId)
-                .HasConstraintName("FK__UserLibra__Proje__60A75C0F");
-
-            entity.HasOne(d => d.User).WithMany(p => p.UserLibraries)
-                .HasForeignKey(d => d.UserId)
-                .HasConstraintName("FK__UserLibra__UserI__5FB337D6");
         });
 
         modelBuilder.Entity<UserSubscription>(entity =>
         {
-            entity.HasKey(e => e.SubscriptionId).HasName("PK__UserSubs__9A2B24BD2DCC3AD7");
+            entity.HasKey(e => e.SubscriptionId).HasName("PK__UserSubs__9A2B24BD2116D2B8");
 
             entity.HasIndex(e => new { e.UserId, e.Status }, "IX_UserSubs_User_Status");
 
@@ -503,16 +413,19 @@ public partial class StoryAI_DBContext : DbContext
                 .HasMaxLength(20)
                 .IsUnicode(false)
                 .HasDefaultValue("Active");
-            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("(sysutcdatetime())");
+            entity.Property(e => e.UsedAnalysisCount).HasDefaultValue(0);
+            entity.Property(e => e.UsedTokens).HasDefaultValue(0L);
             entity.Property(e => e.UserId).HasColumnName("UserID");
 
             entity.HasOne(d => d.Plan).WithMany(p => p.UserSubscriptions)
                 .HasForeignKey(d => d.PlanId)
-                .HasConstraintName("FK__UserSubsc__PlanI__300424B4");
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__UserSubsc__PlanI__30F848ED");
 
             entity.HasOne(d => d.User).WithMany(p => p.UserSubscriptions)
                 .HasForeignKey(d => d.UserId)
-                .HasConstraintName("FK__UserSubsc__UserI__2F10007B");
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__UserSubsc__UserI__300424B4");
         });
 
         OnModelCreatingPartial(modelBuilder);

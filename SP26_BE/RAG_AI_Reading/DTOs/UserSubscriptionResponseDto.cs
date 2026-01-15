@@ -9,9 +9,11 @@ namespace RAG_AI_Reading.DTOs
         public int PlanId { get; set; }
         public string PlanName { get; set; } = string.Empty;
         public decimal Price { get; set; }
-        public string Status { get; set; } = string.Empty; // Active, Expired, Cancelled
-        public DateTime? StartDate { get; set; }
-        public DateTime? EndDate { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+        public int UsedAnalysisCount { get; set; }
+        public long UsedTokens { get; set; }
         public DateTime CreatedAt { get; set; }
     }
 }

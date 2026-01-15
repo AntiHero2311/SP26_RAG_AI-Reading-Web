@@ -9,17 +9,19 @@ public partial class Chapter
 {
     public int ChapterId { get; set; }
 
-    public int PublicationId { get; set; }
+    public int ProjectId { get; set; }
 
     public int ChapterNo { get; set; }
 
     public string Title { get; set; }
 
-    public string ContentRef { get; set; }
+    public string Summary { get; set; }
 
-    public DateTime CreatedAt { get; set; }
+    public DateTime? CreatedAt { get; set; }
 
-    public DateTime UpdatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 
-    public virtual Publication Publication { get; set; }
+    public virtual ICollection<ChapterVersion> ChapterVersions { get; set; } = new List<ChapterVersion>();
+
+    public virtual Project Project { get; set; }
 }

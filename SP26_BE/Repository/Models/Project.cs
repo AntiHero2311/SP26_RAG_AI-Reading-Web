@@ -9,11 +9,9 @@ public partial class Project
 {
     public int ProjectId { get; set; }
 
-    public int? AuthorId { get; set; }
+    public int AuthorId { get; set; }
 
     public string Title { get; set; }
-
-    public string Genre { get; set; }
 
     public string Summary { get; set; }
 
@@ -21,23 +19,17 @@ public partial class Project
 
     public string Status { get; set; }
 
-    public bool IsDeleted { get; set; }
+    public bool? IsDeleted { get; set; }
 
-    public DateTime CreatedAt { get; set; }
+    public DateTime? CreatedAt { get; set; }
 
     public DateTime? UpdatedAt { get; set; }
 
     public virtual User Author { get; set; }
 
-    public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
+    public virtual ICollection<Chapter> Chapters { get; set; } = new List<Chapter>();
 
-    public virtual ICollection<ManuscriptVersion> ManuscriptVersions { get; set; } = new List<ManuscriptVersion>();
+    public virtual ICollection<ChatSession> ChatSessions { get; set; } = new List<ChatSession>();
 
-    public virtual ICollection<Publication> Publications { get; set; } = new List<Publication>();
-
-    public virtual ICollection<Rating> Ratings { get; set; } = new List<Rating>();
-
-    public virtual ICollection<ReadingHistory> ReadingHistories { get; set; } = new List<ReadingHistory>();
-
-    public virtual ICollection<UserLibrary> UserLibraries { get; set; } = new List<UserLibrary>();
+    public virtual ICollection<Genre> Genres { get; set; } = new List<Genre>();
 }

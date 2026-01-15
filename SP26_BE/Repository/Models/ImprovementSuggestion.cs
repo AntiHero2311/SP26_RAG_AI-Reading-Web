@@ -19,7 +19,13 @@ public partial class ImprovementSuggestion
 
     public string Severity { get; set; }
 
-    public DateTime CreatedAt { get; set; }
+    public DateTime? CreatedAt { get; set; }
+
+    public int? CreatorId { get; set; }
+
+    public bool? IsResolved { get; set; }
+
+    public virtual User Creator { get; set; }
 
     public virtual AnalysisReport Report { get; set; }
 }

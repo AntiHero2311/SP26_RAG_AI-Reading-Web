@@ -50,13 +50,15 @@ namespace Service
 
             var newUser = new User
             {
-                FullName = fullName,    
-                Email = email,
+                FullName = fullName.Trim(),
+                Email = email.Trim().ToLower(),
                 PasswordHash = passwordHash,
-                AvatarUrl = avatarUrl,
-                Role = "User",
+                AvatarUrl = avatarUrl?.Trim() ?? "",
+                Role = "Author", // ✅ Đảm bảo Role luôn có giá trị
                 IsActive = true,
-                CreatedAt = DateTime.Now
+                CreatedAt = DateTime.UtcNow, // ✅ Dùng UTC
+                RefreshToken = "", // ✅ Khởi tạo empty string
+                PasswordResetToken = "" // ✅ Khởi tạo empty string
             };
 
             var createdUser = await _userRepository.CreateAsync(newUser);

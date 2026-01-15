@@ -17,18 +17,15 @@ namespace Service
         public async Task<(bool Success, string Message, Project? Project)> CreateProjectAsync(
             int authorId, 
             string title, 
-            string? genre, 
             string? summary, 
             string? coverImageUrl)
         {
-            // Validate author exists
             var author = await _userRepository.GetByIdAsync(authorId);
             if (author == null)
             {
                 return (false, "Không tìm thấy tác giả", null);
             }
 
-            // Validate input
             if (string.IsNullOrWhiteSpace(title))
             {
                 return (false, "Tiêu đề là bắt buộc", null);
@@ -38,7 +35,6 @@ namespace Service
             {
                 AuthorId = authorId,
                 Title = title.Trim(),
-                Genre = genre?.Trim(),
                 Summary = summary?.Trim(),
                 CoverImageUrl = coverImageUrl?.Trim(),
                 Status = "Draft",
@@ -62,12 +58,10 @@ namespace Service
             int projectId,
             int userId,
             string title,
-            string? genre,
             string? summary,
             string? coverImageUrl,
             string? status)
         {
-            // Check ownership
             var isOwner = await _projectRepository.IsOwnerAsync(projectId, userId);
             if (!isOwner)
             {
@@ -80,15 +74,12 @@ namespace Service
                 return (false, "Không tìm thấy truyện", null);
             }
 
-            // Validate input
             if (string.IsNullOrWhiteSpace(title))
             {
                 return (false, "Tiêu đề là bắt buộc", null);
             }
 
-            // Update fields
             project.Title = title.Trim();
-            project.Genre = genre?.Trim();
             project.Summary = summary?.Trim();
             project.CoverImageUrl = coverImageUrl?.Trim();
 
@@ -107,7 +98,6 @@ namespace Service
 
         public async Task<(bool Success, string Message)> DeleteProjectAsync(int projectId, int userId)
         {
-            // Check ownership
             var isOwner = await _projectRepository.IsOwnerAsync(projectId, userId);
             if (!isOwner)
             {

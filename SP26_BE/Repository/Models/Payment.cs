@@ -23,7 +23,9 @@ public partial class Payment
 
     public DateTime? PaidAt { get; set; }
 
-    public DateTime CreatedAt { get; set; }
+    public DateTime? CreatedAt { get; set; }
+
+    public string Note { get; set; }
 
     public virtual UserSubscription Subscription { get; set; }
 }

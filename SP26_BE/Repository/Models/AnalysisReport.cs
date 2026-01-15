@@ -27,5 +27,5 @@ public partial class AnalysisReport
 
     public virtual ICollection<ImprovementSuggestion> ImprovementSuggestions { get; set; } = new List<ImprovementSuggestion>();
 
-    public virtual ManuscriptVersion Version { get; set; }
+    public virtual ChapterVersion Version { get; set; }
 }

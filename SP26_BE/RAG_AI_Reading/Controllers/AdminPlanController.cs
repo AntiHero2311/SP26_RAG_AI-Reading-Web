@@ -34,11 +34,11 @@ namespace RAG_AI_Reading.Controllers
             {
                 PlanId = p.PlanId,
                 PlanName = p.PlanName,
-                Price = p.Price,
-                AnalysisLimit = p.AnalysisLimit ?? 0,
-                CanReadUnlimited = p.CanReadUnlimited ?? false,
+                Price = p.Price ?? 0,
+                MaxAnalysisCount = p.MaxAnalysisCount ?? 0,
+                MaxTokenLimit = p.MaxTokenLimit ?? 0,
                 Description = p.Description,
-                IsActive = p.IsActive,
+                IsActive = p.IsActive ?? true,
                 TotalSubscribers = p.UserSubscriptions?.Count(s => s.Status == "Active") ?? 0
             }).ToList();
 
@@ -51,7 +51,7 @@ namespace RAG_AI_Reading.Controllers
         }
 
         /// <summary>
-        /// Tạo gói cước mới (Nhập Tên, Giá, Số lượt AI, Quyền đọc VIP)
+        /// Tạo gói cước mới (Nhập Tên, Giá, Số lượt AI, Giới hạn Token)
         /// </summary>
         [HttpPost("plans")]
         public async Task<IActionResult> CreatePlan([FromBody] CreatePlanRequestDto request)
@@ -64,8 +64,8 @@ namespace RAG_AI_Reading.Controllers
             var (success, message, plan) = await _subscriptionService.CreatePlanAsync(
                 request.PlanName,
                 request.Price,
-                request.AnalysisLimit,
-                request.CanReadUnlimited,
+                request.MaxAnalysisCount,
+                request.MaxTokenLimit,
                 request.Description
             );
 
@@ -78,11 +78,11 @@ namespace RAG_AI_Reading.Controllers
             {
                 PlanId = plan!.PlanId,
                 PlanName = plan.PlanName,
-                Price = plan.Price,
-                AnalysisLimit = plan.AnalysisLimit ?? 0,
-                CanReadUnlimited = plan.CanReadUnlimited ?? false,
+                Price = plan.Price ?? 0,
+                MaxAnalysisCount = plan.MaxAnalysisCount ?? 0,
+                MaxTokenLimit = plan.MaxTokenLimit ?? 0,
                 Description = plan.Description,
-                IsActive = plan.IsActive,
+                IsActive = plan.IsActive ?? true,
                 TotalSubscribers = 0
             };
 
@@ -110,11 +110,11 @@ namespace RAG_AI_Reading.Controllers
             {
                 PlanId = plan.PlanId,
                 PlanName = plan.PlanName,
-                Price = plan.Price,
-                AnalysisLimit = plan.AnalysisLimit ?? 0,
-                CanReadUnlimited = plan.CanReadUnlimited ?? false,
+                Price = plan.Price ?? 0,
+                MaxAnalysisCount = plan.MaxAnalysisCount ?? 0,
+                MaxTokenLimit = plan.MaxTokenLimit ?? 0,
                 Description = plan.Description,
-                IsActive = plan.IsActive,
+                IsActive = plan.IsActive ?? true,
                 TotalSubscribers = plan.UserSubscriptions?.Count(s => s.Status == "Active") ?? 0
             };
 
@@ -140,8 +140,8 @@ namespace RAG_AI_Reading.Controllers
                 id,
                 request.PlanName,
                 request.Price,
-                request.AnalysisLimit,
-                request.CanReadUnlimited,
+                request.MaxAnalysisCount,
+                (int)request.MaxTokenLimit, // FIX: Cast long to int
                 request.Description
             );
 
@@ -154,11 +154,11 @@ namespace RAG_AI_Reading.Controllers
             {
                 PlanId = plan!.PlanId,
                 PlanName = plan.PlanName,
-                Price = plan.Price,
-                AnalysisLimit = plan.AnalysisLimit ?? 0,
-                CanReadUnlimited = plan.CanReadUnlimited ?? false,
+                Price = plan.Price ?? 0,
+                MaxAnalysisCount = plan.MaxAnalysisCount ?? 0,
+                MaxTokenLimit = plan.MaxTokenLimit ?? 0,
                 Description = plan.Description,
-                IsActive = plan.IsActive,
+                IsActive = plan.IsActive ?? true,
                 TotalSubscribers = plan.UserSubscriptions?.Count(s => s.Status == "Active") ?? 0
             };
 
@@ -201,16 +201,18 @@ namespace RAG_AI_Reading.Controllers
             var subscriptionList = subscriptions.Select(s => new UserSubscriptionResponseDto
             {
                 SubscriptionId = s.SubscriptionId,
-                UserId = s.UserId ?? 0,
+                UserId = s.UserId,
                 UserName = s.User?.FullName ?? "",
                 UserEmail = s.User?.Email ?? "",
-                PlanId = s.PlanId ?? 0,
+                PlanId = s.PlanId,
                 PlanName = s.Plan?.PlanName ?? "",
                 Price = s.Plan?.Price ?? 0,
                 Status = s.Status ?? "",
                 StartDate = s.StartDate,
                 EndDate = s.EndDate,
-                CreatedAt = s.CreatedAt
+                UsedAnalysisCount = s.UsedAnalysisCount ?? 0,
+                UsedTokens = s.UsedTokens ?? 0,
+                CreatedAt = s.CreatedAt ?? DateTime.MinValue
             }).ToList();
 
             return Ok(new

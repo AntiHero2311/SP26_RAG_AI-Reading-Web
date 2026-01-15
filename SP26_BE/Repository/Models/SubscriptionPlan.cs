@@ -11,15 +11,15 @@ public partial class SubscriptionPlan
 
     public string PlanName { get; set; }
 
-    public decimal Price { get; set; }
+    public decimal? Price { get; set; }
 
-    public int? AnalysisLimit { get; set; }
+    public int? MaxAnalysisCount { get; set; }
 
-    public bool? CanReadUnlimited { get; set; }
+    public long? MaxTokenLimit { get; set; }
 
     public string Description { get; set; }
 
-    public bool IsActive { get; set; }
+    public bool? IsActive { get; set; }
 
     public virtual ICollection<UserSubscription> UserSubscriptions { get; set; } = new List<UserSubscription>();
 }
