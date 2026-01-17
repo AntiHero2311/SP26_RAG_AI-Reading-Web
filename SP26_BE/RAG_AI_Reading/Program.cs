@@ -16,17 +16,22 @@ namespace RAG_AI_Reading
             // Add services to the container.
             builder.Services.AddControllers();
 
-            // Đăng ký các Repository
-            builder.Services.AddScoped<Repository.ProjectRepository>();
-            builder.Services.AddScoped<Repository.UserRepository>();
+            // 1. Tự động đăng ký tất cả Repository
+            builder.Services.Scan(scan => scan
+                .FromAssembliesOf(typeof(Repository.UserRepository)) // Chỉ cần trỏ vào 1 class bất kỳ trong Project Repository
+                .AddClasses(classes => classes.Where(type => type.Name.EndsWith("Repository"))) // Chỉ lấy các file tên kết thúc bằng "Repository"
+                .AsSelf() // Đăng ký chính nó (UserRepository -> UserRepository)
+                .WithScopedLifetime()); // Vòng đời Scoped (Mỗi request 1 lần)
 
-            // Đăng ký Service
-            builder.Services.AddScoped<Service.ProjectService>();
-            builder.Services.AddScoped<Service.AuthService>();
+            // 2. Tự động đăng ký tất cả Service
+            builder.Services.Scan(scan => scan
+                .FromAssembliesOf(typeof(Service.AuthService)) // Trỏ vào 1 class bất kỳ trong Project Service
+                .AddClasses(classes => classes.Where(type => type.Name.EndsWith("Service"))) // Chỉ lấy các file tên kết thúc bằng "Service"
+                .AsSelf()
+                .WithScopedLifetime());
 
 
-
-            // 2. Configure JWT Authentication
+            // 3. Configure JWT Authentication
             var jwtKey = builder.Configuration["Jwt:Key"];
             var jwtIssuer = builder.Configuration["Jwt:Issuer"];
             var jwtAudience = builder.Configuration["Jwt:Audience"];
