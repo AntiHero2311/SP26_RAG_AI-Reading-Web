@@ -10,18 +10,16 @@ namespace RAG_AI_Reading.Controllers
     {
         private readonly AuthService _authService;
 
-        public AuthController(IConfiguration configuration)
+        public AuthController(AuthService authService)
         {
-            _authService = new AuthService(configuration);
+            _authService = authService;
         }
 
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequestDto request)
         {
             if (!ModelState.IsValid)
-            {
                 return BadRequest(ModelState);
-            }
 
             var (success, message, user) = await _authService.RegisterAsync(
                 request.FullName,
@@ -31,14 +29,11 @@ namespace RAG_AI_Reading.Controllers
             );
 
             if (!success)
-            {
                 return BadRequest(new { message });
-            }
 
             var accessToken = _authService.GenerateJwtToken(user!);
             var refreshToken = _authService.GenerateRefreshToken();
 
-            // Lưu refresh token vào database
             await _authService.SaveRefreshTokenAsync(user!, refreshToken);
 
             var response = new AuthResponseDto
@@ -63,9 +58,7 @@ namespace RAG_AI_Reading.Controllers
         public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
         {
             if (!ModelState.IsValid)
-            {
                 return BadRequest(ModelState);
-            }
 
             var (success, message, user) = await _authService.LoginAsync(
                 request.Email,
@@ -73,14 +66,11 @@ namespace RAG_AI_Reading.Controllers
             );
 
             if (!success)
-            {
                 return Unauthorized(new { message });
-            }
 
             var accessToken = _authService.GenerateJwtToken(user!);
             var refreshToken = _authService.GenerateRefreshToken();
 
-            // Lưu refresh token vào database
             await _authService.SaveRefreshTokenAsync(user!, refreshToken);
 
             var response = new AuthResponseDto
@@ -105,22 +95,16 @@ namespace RAG_AI_Reading.Controllers
         public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequestDto request)
         {
             if (!ModelState.IsValid)
-            {
                 return BadRequest(ModelState);
-            }
 
             var (success, message, user) = await _authService.RefreshTokenAsync(request.RefreshToken);
 
             if (!success)
-            {
                 return Unauthorized(new { message });
-            }
 
-            // Generate new tokens
             var newAccessToken = _authService.GenerateJwtToken(user!);
             var newRefreshToken = _authService.GenerateRefreshToken();
 
-            // Update refresh token in database
             await _authService.SaveRefreshTokenAsync(user!, newRefreshToken);
 
             var response = new AuthResponseDto
@@ -135,7 +119,7 @@ namespace RAG_AI_Reading.Controllers
 
             return Ok(new
             {
-                message = "Cập lại token mới thành công",
+                message = "Cấp lại token mới thành công",
                 data = response,
                 refreshToken = newRefreshToken
             });
@@ -145,12 +129,11 @@ namespace RAG_AI_Reading.Controllers
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequestDto request)
         {
             if (!ModelState.IsValid)
-            {
                 return BadRequest(ModelState);
-            }
 
             var (success, message) = await _authService.ForgotPasswordAsync(request.Email);
 
+            // Luôn trả về OK để bảo mật (tránh check email tồn tại)
             return Ok(new { message });
         }
 
@@ -158,9 +141,7 @@ namespace RAG_AI_Reading.Controllers
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequestDto request)
         {
             if (!ModelState.IsValid)
-            {
                 return BadRequest(ModelState);
-            }
 
             var (success, message) = await _authService.ResetPasswordAsync(
                 request.Token,
@@ -168,9 +149,7 @@ namespace RAG_AI_Reading.Controllers
             );
 
             if (!success)
-            {
                 return BadRequest(new { message });
-            }
 
             return Ok(new { message });
         }

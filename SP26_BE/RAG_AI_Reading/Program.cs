@@ -1,5 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models; 
+using Repository; 
+using Service;    
 using System.Text;
 
 namespace RAG_AI_Reading
@@ -12,8 +15,25 @@ namespace RAG_AI_Reading
 
             // Add services to the container.
             builder.Services.AddControllers();
-            
-            // Configure JWT Authentication
+
+            // Đăng ký các Repository
+            builder.Services.AddScoped<Repository.ProjectRepository>();
+            builder.Services.AddScoped<Repository.UserRepository>();
+
+            // Đăng ký Service
+            builder.Services.AddScoped<Service.ProjectService>();
+            builder.Services.AddScoped<Service.AuthService>();
+
+
+
+            // 2. Configure JWT Authentication
+            var jwtKey = builder.Configuration["Jwt:Key"];
+            var jwtIssuer = builder.Configuration["Jwt:Issuer"];
+            var jwtAudience = builder.Configuration["Jwt:Audience"];
+
+            // Kiểm tra null để tránh lỗi crash lúc khởi động nếu quên cấu hình appsettings.json
+            if (string.IsNullOrEmpty(jwtKey)) throw new Exception("Thiếu cấu hình 'Jwt:Key' trong appsettings.json");
+
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
                 {
@@ -23,25 +43,20 @@ namespace RAG_AI_Reading
                         ValidateAudience = true,
                         ValidateLifetime = true,
                         ValidateIssuerSigningKey = true,
-                        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-                        ValidAudience = builder.Configuration["Jwt:Audience"],
-                        IssuerSigningKey = new SymmetricSecurityKey(
-                            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+                        ValidIssuer = jwtIssuer,
+                        ValidAudience = jwtAudience,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
                     };
 
                     options.Events = new JwtBearerEvents
                     {
                         OnMessageReceived = context =>
                         {
-                            // Lấy token trực tiếp từ Authorization header
                             var token = context.Request.Headers["Authorization"].ToString();
-                            
                             if (!string.IsNullOrEmpty(token))
                             {
-                                // Loại bỏ "Bearer " nếu có
                                 context.Token = token.Replace("Bearer ", "", StringComparison.OrdinalIgnoreCase).Trim();
                             }
-                            
                             return Task.CompletedTask;
                         }
                     };
@@ -49,33 +64,45 @@ namespace RAG_AI_Reading
 
             builder.Services.AddAuthorization();
 
-            // Configure Swagger/OpenAPI
+            // 3. Configure Swagger/OpenAPI
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(c =>
             {
-                c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "RAG Story AI API", Version = "v1" });
+
+                // Cấu hình nút "Authorize" (ổ khóa) trên Swagger UI
+                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
-                    Description = "Nhập JWT token của bạn (không cần thêm 'Bearer')",
+                    Description = "Nhập JWT Token vào đây (Ví dụ: eyJhbGciOiJIUz...)",
                     Name = "Authorization",
-                    In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-                    Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
-                    Scheme = "Bearer"
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "Bearer",
+                    BearerFormat = "JWT"
                 });
 
-                c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {
                     {
-                        new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                        new OpenApiSecurityScheme
                         {
-                            Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                            Reference = new OpenApiReference
                             {
-                                Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                                Type = ReferenceType.SecurityScheme,
                                 Id = "Bearer"
                             }
                         },
                         new string[] { }
                     }
                 });
+            });
+
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll",
+                    b => b.AllowAnyOrigin()
+                          .AllowAnyMethod()
+                          .AllowAnyHeader());
             });
 
             var app = builder.Build();
@@ -88,6 +115,9 @@ namespace RAG_AI_Reading
             }
 
             app.UseHttpsRedirection();
+            
+            // Kích hoạt CORS trước Auth
+            app.UseCors("AllowAll"); 
 
             app.UseAuthentication();
             app.UseAuthorization();
