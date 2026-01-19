@@ -13,7 +13,6 @@ namespace RAG_AI_Reading.Controllers
     {
         private readonly ProjectService _projectService;
 
-        // 1. SỬA: Dùng DI Constructor
         public ProjectController(ProjectService projectService)
         {
             _projectService = projectService;
@@ -53,7 +52,6 @@ namespace RAG_AI_Reading.Controllers
         [AllowAnonymous] // Cho phép khách xem
         public async Task<IActionResult> GetProjectById(int id)
         {
-            // Gọi qua Service để được xử lý Giải mã
             var (success, message, project) = await _projectService.GetProjectByIdAsync(id);
 
             if (!success) return NotFound(new { message });

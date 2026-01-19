@@ -8,9 +8,7 @@ namespace Service
     {
         private readonly ChapterRepository _chapterRepository;
         private readonly ProjectRepository _projectRepository;
-        private readonly UserRepository _userRepository; // Cần thêm cái này để lấy Key
-
-        // 1. SỬA: Constructor dùng DI
+        private readonly UserRepository _userRepository;
         public ChapterService(
             ChapterRepository chapterRepo,
             ProjectRepository projectRepo,
@@ -22,27 +20,23 @@ namespace Service
         }
 
         public async Task<(bool Success, string Message, Chapter? Chapter)> CreateChapterAsync(
-            int userId, // ID của người đang thao tác (Author)
+            int userId,
             int projectId,
             int chapterNo,
             string title,
             string? summary)
         {
-            // Kiểm tra project
             var project = await _projectRepository.GetByIdAsync(projectId);
             if (project == null) return (false, "Không tìm thấy dự án truyện", null);
 
-            // Kiểm tra quyền (chỉ Author mới được tạo chapter)
             if (project.AuthorId != userId) return (false, "Bạn không có quyền thêm chương", null);
 
-            // Lấy Key của Author
             var author = await _userRepository.GetByIdAsync(userId);
             if (string.IsNullOrEmpty(author?.DataEncryptionKey))
                 return (false, "Lỗi: Tài khoản chưa có khóa mã hóa", null);
 
             string encryptionKey = author.DataEncryptionKey;
 
-            // Kiểm tra trùng chapter no
             if (await _chapterRepository.ExistsAsync(projectId, chapterNo))
                 return (false, $"Chương số {chapterNo} đã tồn tại", null);
 
@@ -52,7 +46,6 @@ namespace Service
             {
                 ProjectId = projectId,
                 ChapterNo = chapterNo,
-                // 2. MÃ HÓA TRƯỚC KHI LƯU
                 Title = SecurityHelper.Encrypt(title.Trim(), encryptionKey),
                 Summary = summary != null ? SecurityHelper.Encrypt(summary.Trim(), encryptionKey) : null,
                 CreatedAt = DateTime.UtcNow
@@ -60,10 +53,9 @@ namespace Service
 
             var createdChapter = await _chapterRepository.CreateAsync(newChapter);
 
-            // Gán lại bản rõ để Controller trả về cho User xem ngay
             createdChapter.Title = title;
             createdChapter.Summary = summary;
-            createdChapter.Project = project; // Map ngược lại để hiển thị ProjectTitle
+            createdChapter.Project = project;
 
             return (true, "Tạo chương thành công", createdChapter);
         }
@@ -73,11 +65,9 @@ namespace Service
             var chapter = await _chapterRepository.GetByIdAsync(chapterId);
             if (chapter == null) return (false, "Không tìm thấy chương", null);
 
-            // Phải lấy Project -> Author -> Key
             var project = await _projectRepository.GetByIdAsync(chapter.ProjectId);
             var author = await _userRepository.GetByIdAsync(project.AuthorId);
 
-            // 3. GIẢI MÃ ĐỂ XEM CHI TIẾT
             chapter.Title = SecurityHelper.Decrypt(chapter.Title, author.DataEncryptionKey);
             chapter.Summary = SecurityHelper.Decrypt(chapter.Summary, author.DataEncryptionKey);
 
@@ -89,12 +79,10 @@ namespace Service
             var project = await _projectRepository.GetByIdAsync(projectId);
             if (project == null) return (false, "Không tìm thấy dự án truyện", null);
 
-            // Lấy Key của tác giả cuốn truyện này
             var author = await _userRepository.GetByIdAsync(project.AuthorId);
 
             var chapters = await _chapterRepository.GetByProjectIdAsync(projectId);
 
-            // 4. GIẢI MÃ DANH SÁCH
             foreach (var c in chapters)
             {
                 c.Title = SecurityHelper.Decrypt(c.Title, author.DataEncryptionKey);
@@ -114,16 +102,13 @@ namespace Service
             var chapter = await _chapterRepository.GetByIdAsync(chapterId);
             if (chapter == null) return (false, "Không tìm thấy chương", null);
 
-            // Check quyền: Chapter -> Project -> Check AuthorId
-            // (Hoặc dùng hàm IsOwnerAsync có sẵn trong Repo nếu Repo check join bảng Project)
             var project = await _projectRepository.GetByIdAsync(chapter.ProjectId);
             if (project.AuthorId != userId) return (false, "Không có quyền chỉnh sửa", null);
 
-            var author = await _userRepository.GetByIdAsync(userId); // Lấy Key
+            var author = await _userRepository.GetByIdAsync(userId);
 
             if (string.IsNullOrWhiteSpace(title)) return (false, "Tiêu đề bắt buộc", null);
 
-            // Check trùng số chương
             if (chapterNo.HasValue && chapterNo.Value != chapter.ChapterNo)
             {
                 if (await _chapterRepository.ExistsAsync(chapter.ProjectId, chapterNo.Value))
@@ -131,14 +116,12 @@ namespace Service
                 chapter.ChapterNo = chapterNo.Value;
             }
 
-            // 5. MÃ HÓA KHI UPDATE
             chapter.Title = SecurityHelper.Encrypt(title.Trim(), author.DataEncryptionKey);
             chapter.Summary = summary != null ? SecurityHelper.Encrypt(summary.Trim(), author.DataEncryptionKey) : null;
             chapter.UpdatedAt = DateTime.UtcNow;
 
             var updatedChapter = await _chapterRepository.UpdateAsync(chapter);
 
-            // Trả về bản rõ
             updatedChapter.Title = title;
             updatedChapter.Summary = summary;
 
@@ -150,7 +133,6 @@ namespace Service
             var chapter = await _chapterRepository.GetByIdAsync(chapterId);
             if (chapter == null) return (false, "Không tìm thấy chương");
 
-            // Check quyền thủ công hoặc qua Repo
             var project = await _projectRepository.GetByIdAsync(chapter.ProjectId);
             if (project.AuthorId != userId) return (false, "Không có quyền xóa");
 

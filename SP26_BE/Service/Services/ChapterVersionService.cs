@@ -19,7 +19,6 @@ namespace Service
             int chapterId,
             string rawContent)
         {
-            // Kiểm tra chapter có tồn tại và user có quyền không
             var chapter = await _chapterRepository.GetByIdAsync(chapterId);
             if (chapter == null)
             {
@@ -36,10 +35,8 @@ namespace Service
                 return (false, "Nội dung không được để trống", null);
             }
 
-            // Lấy version number tiếp theo
             var nextVersionNumber = await _versionRepository.GetMaxVersionNumberAsync(chapterId) + 1;
 
-            // Tính số từ
             var wordCount = await _versionRepository.CalculateWordCountAsync(rawContent);
 
             var newVersion = new ChapterVersion
@@ -49,13 +46,11 @@ namespace Service
                 RawContent = rawContent.Trim(),
                 WordCount = wordCount,
                 UploadDate = DateTime.UtcNow,
-                IsActive = nextVersionNumber == 1 // Phiên bản đầu tiên sẽ active mặc định
+                IsActive = nextVersionNumber == 1
             };
 
-            // Nếu là version mới nhất, deactivate các version cũ
             if (nextVersionNumber > 1)
             {
-                // Version mới không tự động active, user phải chọn
                 newVersion.IsActive = false;
             }
 
@@ -114,7 +109,6 @@ namespace Service
                 return (false, "Không tìm thấy phiên bản", null);
             }
 
-            // Kiểm tra quyền sở hữu
             if (!await _versionRepository.IsOwnerAsync(versionId, userId))
             {
                 return (false, "Bạn không có quyền chỉnh sửa phiên bản này", null);
@@ -146,7 +140,6 @@ namespace Service
                 return (false, "Bạn không có quyền xóa phiên bản này");
             }
 
-            // Không cho xóa version đang active
             if (version.IsActive == true)
             {
                 return (false, "Không thể xóa phiên bản đang active. Vui lòng chọn phiên bản khác làm active trước");

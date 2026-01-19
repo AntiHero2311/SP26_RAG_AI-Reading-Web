@@ -22,7 +22,6 @@ namespace Repository
             _context.Chapters.Add(chapter);
             await _context.SaveChangesAsync();
 
-            // Load relationships
             await _context.Entry(chapter)
                 .Reference(c => c.Project)
                 .LoadAsync();
@@ -76,7 +75,6 @@ namespace Repository
             _context.Chapters.Update(chapter);
             await _context.SaveChangesAsync();
 
-            // Reload relationships
             await _context.Entry(chapter)
                 .Reference(c => c.Project)
                 .LoadAsync();

@@ -13,7 +13,6 @@ namespace RAG_AI_Reading.Controllers
     {
         private readonly ChapterService _chapterService;
 
-        // 1. SỬA: Inject Service qua Constructor
         public ChapterController(ChapterService chapterService)
         {
             _chapterService = chapterService;
@@ -33,7 +32,6 @@ namespace RAG_AI_Reading.Controllers
 
             if (!success) return BadRequest(new { message });
 
-            // Service đã trả về Title/Summary dạng rõ (Decrypted) nên map vào DTO bình thường
             var response = MapToDto(chapter!);
 
             return CreatedAtAction(nameof(GetChapterById), new { id = chapter!.ChapterId }, new
@@ -112,7 +110,7 @@ namespace RAG_AI_Reading.Controllers
             {
                 ChapterId = c.ChapterId,
                 ProjectId = c.ProjectId,
-                ProjectTitle = c.Project?.Title ?? "", 
+                ProjectTitle = c.Project?.Title ?? "",
                 ChapterNo = c.ChapterNo,
                 Title = c.Title,
                 Summary = c.Summary,

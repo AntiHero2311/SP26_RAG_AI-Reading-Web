@@ -15,7 +15,6 @@ namespace Service
         private readonly UserRepository _userRepository;
         private readonly IConfiguration _configuration;
 
-        // 1. SỬA: Tiêm UserRepository qua DI thay vì "new" trực tiếp
         public AuthService(IConfiguration configuration, UserRepository userRepository)
         {
             _configuration = configuration;
@@ -28,7 +27,6 @@ namespace Service
             string password,
             string? avatarUrl = null)
         {
-            // Validate đầu vào
             if (string.IsNullOrWhiteSpace(fullName) || fullName.Length < 2)
                 return (false, "Tên phải có ít nhất 2 ký tự", null);
 
@@ -41,25 +39,21 @@ namespace Service
             if (await _userRepository.EmailExistsAsync(email))
                 return (false, "Email đã được sử dụng", null);
 
-            // 2. SỬA: Hash mật khẩu an toàn (Salt + Hash)
             CreatePasswordHash(password, out byte[] passwordHash, out byte[] passwordSalt);
 
-            // Convert sang chuỗi base64 gộp để lưu vào 1 cột PasswordHash trong DB
             string storedPassword = $"{Convert.ToBase64String(passwordSalt)}.{Convert.ToBase64String(passwordHash)}";
 
             var newUser = new User
             {
                 FullName = fullName.Trim(),
                 Email = email.Trim().ToLower(),
-                PasswordHash = storedPassword, // Lưu chuỗi đã gộp
+                PasswordHash = storedPassword,
                 AvatarUrl = avatarUrl?.Trim() ?? "",
                 Role = "Author",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow,
                 RefreshToken = "",
                 PasswordResetToken = "",
-
-                // 3. QUAN TRỌNG: Sinh khóa mã hóa dữ liệu cho User (Project Encryption)
                 DataEncryptionKey = Guid.NewGuid().ToString("N")
             };
 
@@ -77,7 +71,6 @@ namespace Service
             if (user.IsActive != true)
                 return (false, "Tài khoản đã bị vô hiệu hóa", null);
 
-            // 4. SỬA: Verify mật khẩu theo chuẩn mới
             if (!VerifyPasswordHash(password, user.PasswordHash))
                 return (false, "Email hoặc mật khẩu không đúng", null);
 
@@ -104,7 +97,7 @@ namespace Service
                 issuer: _configuration["Jwt:Issuer"],
                 audience: _configuration["Jwt:Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddHours(1), // Dùng UTC
+                expires: DateTime.UtcNow.AddHours(1),
                 signingCredentials: credentials
             );
 
@@ -126,7 +119,7 @@ namespace Service
             if (user == null)
                 return (false, "Refresh token không hợp lệ", null);
 
-            if (user.RefreshTokenExpiryTime <= DateTime.UtcNow) // Dùng UTC
+            if (user.RefreshTokenExpiryTime <= DateTime.UtcNow)
                 return (false, "Refresh token đã hết hạn", null);
 
             return (true, "Refresh token thành công", user);
@@ -141,15 +134,11 @@ namespace Service
             return (true, "Lưu refresh token thành công");
         }
 
-        /* ==========================================================
-           HELPERS: Password Hashing & Validation (Secure HMACSHA512)
-           ========================================================== */
-
         private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
         {
             using (var hmac = new HMACSHA512())
             {
-                passwordSalt = hmac.Key; // Random Salt tự sinh
+                passwordSalt = hmac.Key;
                 passwordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
             }
         }
@@ -158,7 +147,6 @@ namespace Service
         {
             try
             {
-                // Tách chuỗi stored: "Salt.Hash"
                 var parts = storedPassword.Split('.');
                 if (parts.Length != 2) return false;
 
@@ -173,14 +161,13 @@ namespace Service
             }
             catch
             {
-                return false; // Lỗi format
+                return false;
             }
         }
 
         private bool IsValidEmail(string email)
         {
             if (string.IsNullOrWhiteSpace(email)) return false;
-            // Regex đơn giản nhưng hiệu quả hơn try-catch
             try
             {
                 return Regex.IsMatch(email,
@@ -190,13 +177,12 @@ namespace Service
             catch { return false; }
         }
 
-        // Phần Forgot Password giữ nguyên logic cũ nhưng đổi DateTime.Now -> UtcNow
         public async Task<(bool Success, string Message)> ForgotPasswordAsync(string email)
         {
             var user = await _userRepository.GetByEmailAsync(email);
             if (user == null) return (true, "Nếu email tồn tại, link reset mật khẩu đã được gửi");
 
-            var resetToken = GenerateRefreshToken(); // Tái sử dụng hàm sinh random
+            var resetToken = GenerateRefreshToken();
             user.PasswordResetToken = resetToken;
             user.PasswordResetTokenExpiryTime = DateTime.UtcNow.AddHours(1);
 
@@ -212,7 +198,6 @@ namespace Service
             if (user.PasswordResetTokenExpiryTime < DateTime.UtcNow)
                 return (false, "Token đã hết hạn");
 
-            // Tạo hash mới
             CreatePasswordHash(newPassword, out byte[] newHash, out byte[] newSalt);
             string storedPassword = $"{Convert.ToBase64String(newSalt)}.{Convert.ToBase64String(newHash)}";
 

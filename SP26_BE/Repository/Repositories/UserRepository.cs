@@ -7,7 +7,7 @@ namespace Repository
     {
         private readonly StoryAI_DBContext _context;
 
-            public UserRepository()
+        public UserRepository()
         {
             _context = new StoryAI_DBContext();
         }
@@ -78,15 +78,14 @@ namespace Repository
         }
 
         public async Task<(List<User> Users, int TotalCount)> GetAllUsersPaginatedAsync(
-            int pageNumber = 1, 
-            int pageSize = 10, 
+            int pageNumber = 1,
+            int pageSize = 10,
             string? searchTerm = null,
             string? role = null,
             bool includeInactive = false)
         {
             var query = _context.Users
-                .Include(u => u.Projects) // ✅ Chỉ còn Projects
-                // ❌ Bỏ: Comments, FollowFollowers, FollowAuthors
+                .Include(u => u.Projects)
                 .AsNoTracking();
 
             if (!includeInactive)
@@ -97,8 +96,8 @@ namespace Repository
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
                 searchTerm = searchTerm.ToLower();
-                query = query.Where(u => 
-                    u.FullName.ToLower().Contains(searchTerm) || 
+                query = query.Where(u =>
+                    u.FullName.ToLower().Contains(searchTerm) ||
                     u.Email.ToLower().Contains(searchTerm));
             }
 
@@ -122,7 +121,7 @@ namespace Repository
         {
             var existingEntry = _context.ChangeTracker.Entries<User>()
                 .FirstOrDefault(e => e.Entity.UserId == user.UserId);
-            
+
             if (existingEntry != null)
             {
                 existingEntry.State = EntityState.Detached;
@@ -157,8 +156,8 @@ namespace Repository
         {
             return await _context.Users
                 .AsTracking()
-                .FirstOrDefaultAsync(u => u.PasswordResetToken == resetToken 
-                    && u.PasswordResetTokenExpiryTime > DateTime.UtcNow 
+                .FirstOrDefaultAsync(u => u.PasswordResetToken == resetToken
+                    && u.PasswordResetTokenExpiryTime > DateTime.UtcNow
                     && u.IsActive == true);
         }
     }

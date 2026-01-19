@@ -47,10 +47,7 @@ namespace RAG_AI_Reading.Controllers
                 Role = u.Role,
                 IsActive = u.IsActive ?? true,
                 CreatedAt = u.CreatedAt ?? DateTime.MinValue,
-                TotalProjects = u.Projects?.Count ?? 0,
-                TotalComments = 0, // ❌ Bỏ vì không còn relationship
-                TotalFollowers = 0, // ❌ Bỏ vì không còn relationship
-                TotalFollowing = 0  // ❌ Bỏ vì không còn relationship
+                TotalProjects = u.Projects?.Count ?? 0
             }).ToList();
 
             return Ok(new

@@ -14,7 +14,6 @@ namespace Service
             _subscriptionRepository = new UserSubscriptionRepository();
         }
 
-        // Plans Management
         public async Task<(bool Success, string Message, List<SubscriptionPlan>? Plans)> GetAllPlansAsync(
             bool includeInactive = false)
         {
@@ -90,7 +89,7 @@ namespace Service
             plan.PlanName = planName.Trim();
             plan.Price = price;
             plan.MaxAnalysisCount = analysisLimit;
-            plan.MaxTokenLimit = tokenLimit ;
+            plan.MaxTokenLimit = tokenLimit;
             plan.Description = description?.Trim();
 
             var updatedPlan = await _planRepository.UpdateAsync(plan);
@@ -109,7 +108,6 @@ namespace Service
             return (true, $"Đã {statusText} gói cước thành công");
         }
 
-        // User Subscriptions
         public async Task<(bool Success, string Message, List<UserSubscription>? Subscriptions)> GetAllSubscriptionsAsync(
             string? status = null)
         {

@@ -9,11 +9,7 @@
         public string Role { get; set; } = string.Empty;
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
-        
-        // Thống kê thêm
+
         public int TotalProjects { get; set; }
-        public int TotalComments { get; set; }
-        public int TotalFollowers { get; set; }
-        public int TotalFollowing { get; set; }
     }
 }

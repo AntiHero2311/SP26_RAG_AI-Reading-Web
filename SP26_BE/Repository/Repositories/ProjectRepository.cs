@@ -21,12 +21,11 @@ namespace Repository
         {
             _context.Projects.Add(project);
             await _context.SaveChangesAsync();
-            
-            // ✅ Load Author relationship sau khi save
+
             await _context.Entry(project)
                 .Reference(p => p.Author)
                 .LoadAsync();
-            
+
             return project;
         }
 
@@ -71,7 +70,7 @@ namespace Repository
         {
             var existingEntry = _context.ChangeTracker.Entries<Project>()
                 .FirstOrDefault(e => e.Entity.ProjectId == project.ProjectId);
-            
+
             if (existingEntry != null)
             {
                 existingEntry.State = EntityState.Detached;
@@ -80,8 +79,7 @@ namespace Repository
             project.UpdatedAt = DateTime.UtcNow;
             _context.Projects.Update(project);
             await _context.SaveChangesAsync();
-            
-            // ✅ Load relationships sau khi update
+
             await _context.Entry(project)
                 .Reference(p => p.Author)
                 .LoadAsync();
@@ -94,7 +92,7 @@ namespace Repository
             await _context.Entry(project)
                 .Collection(p => p.Genres)
                 .LoadAsync();
-            
+
             return project;
         }
 

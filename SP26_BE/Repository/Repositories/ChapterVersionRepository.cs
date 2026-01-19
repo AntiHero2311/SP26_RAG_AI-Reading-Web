@@ -22,7 +22,6 @@ namespace Repository
             _context.ChapterVersions.Add(version);
             await _context.SaveChangesAsync();
 
-            // Load relationships
             await _context.Entry(version)
                 .Reference(v => v.Chapter)
                 .LoadAsync();
