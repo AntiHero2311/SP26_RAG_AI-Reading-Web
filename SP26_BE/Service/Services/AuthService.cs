@@ -208,5 +208,31 @@ namespace Service
             await _userRepository.UpdateAsync(user);
             return (true, "Đặt lại mật khẩu thành công");
         }
+
+        public async Task<User?> GetUserByPasswordResetTokenAsync(string token)
+        {
+            return await _userRepository.GetByPasswordResetTokenAsync(token);
+        }
+
+        public async Task<(bool Success, string Message)> ChangePasswordAsync(int userId, string currentPassword, string newPassword)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+                return (false, "Người dùng không tồn tại");
+
+            if (!VerifyPasswordHash(currentPassword, user.PasswordHash))
+                return (false, "Mật khẩu hiện tại không đúng");
+
+            if (newPassword.Length < 6)
+                return (false, "Mật khẩu mới phải có ít nhất 6 ký tự");
+
+            CreatePasswordHash(newPassword, out byte[] newHash, out byte[] newSalt);
+            string storedPassword = $"{Convert.ToBase64String(newSalt)}.{Convert.ToBase64String(newHash)}";
+
+            user.PasswordHash = storedPassword;
+            await _userRepository.UpdateAsync(user);
+
+            return (true, "Đổi mật khẩu thành công");
+        }
     }
 }

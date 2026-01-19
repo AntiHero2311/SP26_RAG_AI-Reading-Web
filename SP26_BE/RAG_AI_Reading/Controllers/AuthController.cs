@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RAG_AI_Reading.DTOs;
 using Service;
+using System.Security.Claims;
 
 namespace RAG_AI_Reading.Controllers
 {
@@ -9,10 +11,12 @@ namespace RAG_AI_Reading.Controllers
     public class AuthController : ControllerBase
     {
         private readonly AuthService _authService;
+        private readonly SystemLogService _logService;
 
-        public AuthController(AuthService authService)
+        public AuthController(AuthService authService, SystemLogService logService)
         {
             _authService = authService;
+            _logService = logService;
         }
 
         [HttpPost("register")]
@@ -35,6 +39,12 @@ namespace RAG_AI_Reading.Controllers
             var refreshToken = _authService.GenerateRefreshToken();
 
             await _authService.SaveRefreshTokenAsync(user!, refreshToken);
+
+            await _logService.CreateLogAsync(
+                user!.UserId,
+                "REGISTER",
+                $"User {user.Email} đã đăng ký tài khoản"
+            );
 
             var response = new AuthResponseDto
             {
@@ -72,6 +82,12 @@ namespace RAG_AI_Reading.Controllers
             var refreshToken = _authService.GenerateRefreshToken();
 
             await _authService.SaveRefreshTokenAsync(user!, refreshToken);
+
+            await _logService.CreateLogAsync(
+                user!.UserId,
+                "LOGIN",
+                $"User {user.Email} đã đăng nhập"
+            );
 
             var response = new AuthResponseDto
             {
@@ -143,6 +159,10 @@ namespace RAG_AI_Reading.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
+            var user = await _authService.GetUserByPasswordResetTokenAsync(request.Token);
+            if (user == null)
+                return BadRequest(new { message = "Token không hợp lệ hoặc đã hết hạn" });
+
             var (success, message) = await _authService.ResetPasswordAsync(
                 request.Token,
                 request.NewPassword
@@ -150,6 +170,42 @@ namespace RAG_AI_Reading.Controllers
 
             if (!success)
                 return BadRequest(new { message });
+
+            await _logService.CreateLogAsync(
+                user.UserId,
+                "CHANGE_PASSWORD",
+                $"User {user.Email} đã đổi mật khẩu (reset)"
+            );
+
+            return Ok(new { message });
+        }
+
+        [Authorize]
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequestDto request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out int userId))
+                return Unauthorized(new { message = "Token không hợp lệ" });
+
+            var (success, message) = await _authService.ChangePasswordAsync(
+                userId,
+                request.CurrentPassword,
+                request.NewPassword
+            );
+
+            if (!success)
+                return BadRequest(new { message });
+
+            var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
+            await _logService.CreateLogAsync(
+                userId,
+                "CHANGE_PASSWORD",
+                $"User {userEmail} đã đổi mật khẩu"
+            );
 
             return Ok(new { message });
         }
