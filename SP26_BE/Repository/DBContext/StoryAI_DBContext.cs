@@ -40,6 +40,10 @@ public partial class StoryAI_DBContext : DbContext
 
     public virtual DbSet<Project> Projects { get; set; }
 
+    public virtual DbSet<StaffAuthorContact> StaffAuthorContacts { get; set; }
+
+    public virtual DbSet<StaffAuthorMessage> StaffAuthorMessages { get; set; }
+
     public virtual DbSet<SubscriptionPlan> SubscriptionPlans { get; set; }
 
     public virtual DbSet<SystemConfig> SystemConfigs { get; set; }
@@ -67,7 +71,7 @@ public partial class StoryAI_DBContext : DbContext
     {
         modelBuilder.Entity<Aijob>(entity =>
         {
-            entity.HasKey(e => e.JobId).HasName("PK__AIJobs__056690E2A458DE49");
+            entity.HasKey(e => e.JobId).HasName("PK__AIJobs__056690E24DAFD8B0");
 
             entity.ToTable("AIJobs");
 
@@ -99,7 +103,7 @@ public partial class StoryAI_DBContext : DbContext
 
         modelBuilder.Entity<AnalysisReport>(entity =>
         {
-            entity.HasKey(e => e.ReportId).HasName("PK__Analysis__D5BD48E5F8C13B2C");
+            entity.HasKey(e => e.ReportId).HasName("PK__Analysis__D5BD48E50DCBC821");
 
             entity.Property(e => e.ReportId).HasColumnName("ReportID");
             entity.Property(e => e.AnalysisDataJson).HasColumnName("AnalysisDataJSON");
@@ -114,7 +118,7 @@ public partial class StoryAI_DBContext : DbContext
 
         modelBuilder.Entity<Chapter>(entity =>
         {
-            entity.HasKey(e => e.ChapterId).HasName("PK__Chapters__0893A34A000E9D05");
+            entity.HasKey(e => e.ChapterId).HasName("PK__Chapters__0893A34A1BE48EDA");
 
             entity.HasIndex(e => new { e.ProjectId, e.ChapterNo }, "UQ_Project_Chapter").IsUnique();
 
@@ -130,7 +134,7 @@ public partial class StoryAI_DBContext : DbContext
 
         modelBuilder.Entity<ChapterVersion>(entity =>
         {
-            entity.HasKey(e => e.VersionId).HasName("PK__ChapterV__16C6402FD6FFC370");
+            entity.HasKey(e => e.VersionId).HasName("PK__ChapterV__16C6402FC73BA352");
 
             entity.HasIndex(e => new { e.ChapterId, e.VersionNumber }, "UQ_Chapter_Version").IsUnique();
 
@@ -146,7 +150,7 @@ public partial class StoryAI_DBContext : DbContext
 
         modelBuilder.Entity<ChatMessage>(entity =>
         {
-            entity.HasKey(e => e.MessageId).HasName("PK__ChatMess__C87C037CC3CDCFA4");
+            entity.HasKey(e => e.MessageId).HasName("PK__ChatMess__C87C037CAC9FBD04");
 
             entity.HasIndex(e => e.SessionId, "IX_ChatMessages_Session");
 
@@ -165,7 +169,7 @@ public partial class StoryAI_DBContext : DbContext
 
         modelBuilder.Entity<ChatSession>(entity =>
         {
-            entity.HasKey(e => e.SessionId).HasName("PK__ChatSess__C9F492706F44B305");
+            entity.HasKey(e => e.SessionId).HasName("PK__ChatSess__C9F49270CEACF531");
 
             entity.HasIndex(e => e.ProjectId, "IX_ChatSessions_Project");
 
@@ -189,9 +193,9 @@ public partial class StoryAI_DBContext : DbContext
 
         modelBuilder.Entity<Genre>(entity =>
         {
-            entity.HasKey(e => e.GenreId).HasName("PK__Genres__0385055E8F4052AA");
+            entity.HasKey(e => e.GenreId).HasName("PK__Genres__0385055EA75081B6");
 
-            entity.HasIndex(e => e.Name, "UQ__Genres__737584F64EBE0723").IsUnique();
+            entity.HasIndex(e => e.Name, "UQ__Genres__737584F60E52E6DF").IsUnique();
 
             entity.Property(e => e.GenreId).HasColumnName("GenreID");
             entity.Property(e => e.Name)
@@ -201,7 +205,7 @@ public partial class StoryAI_DBContext : DbContext
 
         modelBuilder.Entity<ImprovementSuggestion>(entity =>
         {
-            entity.HasKey(e => e.SuggestionId).HasName("PK__Improvem__9409952884B8651D");
+            entity.HasKey(e => e.SuggestionId).HasName("PK__Improvem__9409952806BF588F");
 
             entity.Property(e => e.SuggestionId).HasColumnName("SuggestionID");
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
@@ -217,7 +221,7 @@ public partial class StoryAI_DBContext : DbContext
 
             entity.HasOne(d => d.Creator).WithMany(p => p.ImprovementSuggestions)
                 .HasForeignKey(d => d.CreatorId)
-                .HasConstraintName("FK__Improveme__Creat__5FB337D6");
+                .HasConstraintName("FK__Improveme__Creat__5EBF139D");
 
             entity.HasOne(d => d.Report).WithMany(p => p.ImprovementSuggestions)
                 .HasForeignKey(d => d.ReportId)
@@ -227,7 +231,7 @@ public partial class StoryAI_DBContext : DbContext
 
         modelBuilder.Entity<ManuscriptChunk>(entity =>
         {
-            entity.HasKey(e => e.ChunkId).HasName("PK__Manuscri__FBFF9D204E565158");
+            entity.HasKey(e => e.ChunkId).HasName("PK__Manuscri__FBFF9D201FC20BCB");
 
             entity.HasIndex(e => new { e.VersionId, e.ChunkIndex }, "UQ_Version_Chunk").IsUnique();
 
@@ -246,7 +250,7 @@ public partial class StoryAI_DBContext : DbContext
 
         modelBuilder.Entity<Payment>(entity =>
         {
-            entity.HasKey(e => e.PaymentId).HasName("PK__Payments__9B556A58C09F9DE0");
+            entity.HasKey(e => e.PaymentId).HasName("PK__Payments__9B556A58A74C6CB1");
 
             entity.HasIndex(e => e.CreatedAt, "IX_Payments_Date");
 
@@ -281,7 +285,7 @@ public partial class StoryAI_DBContext : DbContext
 
         modelBuilder.Entity<Project>(entity =>
         {
-            entity.HasKey(e => e.ProjectId).HasName("PK__Projects__761ABED0464932A9");
+            entity.HasKey(e => e.ProjectId).HasName("PK__Projects__761ABED07DEAC88E");
 
             entity.Property(e => e.ProjectId).HasColumnName("ProjectID");
             entity.Property(e => e.AuthorId).HasColumnName("AuthorID");
@@ -294,9 +298,6 @@ public partial class StoryAI_DBContext : DbContext
                 .HasMaxLength(20)
                 .IsUnicode(false)
                 .HasDefaultValue("Draft");
-            entity.Property(e => e.Title)
-                .IsRequired()
-                .HasMaxLength(200);
 
             entity.HasOne(d => d.Author).WithMany(p => p.Projects)
                 .HasForeignKey(d => d.AuthorId)
@@ -321,9 +322,70 @@ public partial class StoryAI_DBContext : DbContext
                     });
         });
 
+        modelBuilder.Entity<StaffAuthorContact>(entity =>
+        {
+            entity.HasKey(e => e.ContactId).HasName("PK__StaffAut__5C6625BB779563F4");
+
+            entity.ToTable("StaffAuthorContact");
+
+            entity.HasIndex(e => e.AuthorId, "IX_StaffAuthorContact_AuthorID");
+
+            entity.HasIndex(e => e.StaffId, "IX_StaffAuthorContact_StaffID");
+
+            entity.HasIndex(e => e.Status, "IX_StaffAuthorContact_Status");
+
+            entity.Property(e => e.ContactId).HasColumnName("ContactID");
+            entity.Property(e => e.AuthorId).HasColumnName("AuthorID");
+            entity.Property(e => e.ContactDate).HasDefaultValueSql("(sysutcdatetime())");
+            entity.Property(e => e.StaffId).HasColumnName("StaffID");
+            entity.Property(e => e.Status)
+                .HasMaxLength(20)
+                .IsUnicode(false)
+                .HasDefaultValue("Active");
+
+            entity.HasOne(d => d.Author).WithMany(p => p.StaffAuthorContactAuthors)
+                .HasForeignKey(d => d.AuthorId)
+                .HasConstraintName("FK_StaffAuthorContact_Author");
+
+            entity.HasOne(d => d.Staff).WithMany(p => p.StaffAuthorContactStaffs)
+                .HasForeignKey(d => d.StaffId)
+                .HasConstraintName("FK_StaffAuthorContact_Staff");
+        });
+
+        modelBuilder.Entity<StaffAuthorMessage>(entity =>
+        {
+            entity.HasKey(e => e.MessageId).HasName("PK__StaffAut__C87C037C0CFDEA2A");
+
+            entity.ToTable("StaffAuthorMessage");
+
+            entity.HasIndex(e => e.ContactId, "IX_StaffAuthorMessage_ContactID");
+
+            entity.HasIndex(e => e.IsRead, "IX_StaffAuthorMessage_IsRead");
+
+            entity.HasIndex(e => e.SendAt, "IX_StaffAuthorMessage_SendAt");
+
+            entity.Property(e => e.MessageId).HasColumnName("MessageID");
+            entity.Property(e => e.ContactId).HasColumnName("ContactID");
+            entity.Property(e => e.IsRead).HasDefaultValue(false);
+            entity.Property(e => e.SendAt).HasDefaultValueSql("(sysutcdatetime())");
+            entity.Property(e => e.SenderId).HasColumnName("SenderID");
+            entity.Property(e => e.SenderType)
+                .HasMaxLength(20)
+                .IsUnicode(false);
+
+            entity.HasOne(d => d.Contact).WithMany(p => p.StaffAuthorMessages)
+                .HasForeignKey(d => d.ContactId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_StaffAuthorMessage_Contact");
+
+            entity.HasOne(d => d.Sender).WithMany(p => p.StaffAuthorMessages)
+                .HasForeignKey(d => d.SenderId)
+                .HasConstraintName("FK_StaffAuthorMessage_Sender");
+        });
+
         modelBuilder.Entity<SubscriptionPlan>(entity =>
         {
-            entity.HasKey(e => e.PlanId).HasName("PK__Subscrip__755C22D73FD259F3");
+            entity.HasKey(e => e.PlanId).HasName("PK__Subscrip__755C22D7B49FE93C");
 
             entity.Property(e => e.PlanId).HasColumnName("PlanID");
             entity.Property(e => e.Description).HasMaxLength(500);
@@ -340,7 +402,7 @@ public partial class StoryAI_DBContext : DbContext
 
         modelBuilder.Entity<SystemConfig>(entity =>
         {
-            entity.HasKey(e => e.ConfigKey).HasName("PK__SystemCo__4A306785B5C41F25");
+            entity.HasKey(e => e.ConfigKey).HasName("PK__SystemCo__4A306785696A1823");
 
             entity.Property(e => e.ConfigKey)
                 .HasMaxLength(50)
@@ -355,7 +417,7 @@ public partial class StoryAI_DBContext : DbContext
 
         modelBuilder.Entity<SystemLog>(entity =>
         {
-            entity.HasKey(e => e.LogId).HasName("PK__SystemLo__5E5499A8A9DC10C9");
+            entity.HasKey(e => e.LogId).HasName("PK__SystemLo__5E5499A82447CF22");
 
             entity.Property(e => e.LogId).HasColumnName("LogID");
             entity.Property(e => e.ActionType)
@@ -371,19 +433,20 @@ public partial class StoryAI_DBContext : DbContext
 
         modelBuilder.Entity<User>(entity =>
         {
-            entity.HasKey(e => e.UserId).HasName("PK__Users__1788CCACF2965DA6");
+            entity.HasKey(e => e.UserId).HasName("PK__Users__1788CCACE3CD4A5C");
 
             entity.HasIndex(e => e.Email, "IX_Users_Email");
 
             entity.HasIndex(e => e.Role, "IX_Users_Role");
 
-            entity.HasIndex(e => e.Email, "UQ__Users__A9D10534C263D021").IsUnique();
+            entity.HasIndex(e => e.Email, "UQ__Users__A9D10534ABECF694").IsUnique();
 
             entity.Property(e => e.UserId).HasColumnName("UserID");
             entity.Property(e => e.AvatarUrl)
                 .HasMaxLength(500)
                 .HasColumnName("AvatarURL");
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysutcdatetime())");
+            entity.Property(e => e.DataEncryptionKey).HasMaxLength(500);
             entity.Property(e => e.Email)
                 .IsRequired()
                 .HasMaxLength(100);
@@ -391,9 +454,6 @@ public partial class StoryAI_DBContext : DbContext
                 .IsRequired()
                 .HasMaxLength(100);
             entity.Property(e => e.IsActive).HasDefaultValue(true);
-            entity.Property(e => e.PasswordHash)
-                .IsRequired()
-                .HasMaxLength(255);
             entity.Property(e => e.Role)
                 .IsRequired()
                 .HasMaxLength(20)
@@ -402,7 +462,7 @@ public partial class StoryAI_DBContext : DbContext
 
         modelBuilder.Entity<UserSubscription>(entity =>
         {
-            entity.HasKey(e => e.SubscriptionId).HasName("PK__UserSubs__9A2B24BD2116D2B8");
+            entity.HasKey(e => e.SubscriptionId).HasName("PK__UserSubs__9A2B24BD668AA507");
 
             entity.HasIndex(e => new { e.UserId, e.Status }, "IX_UserSubs_User_Status");
 

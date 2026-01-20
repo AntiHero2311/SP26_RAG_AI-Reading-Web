@@ -2,7 +2,8 @@
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models; 
 using Repository; 
-using Service;    
+using Service;
+using RAG_AI_Reading.Hubs;
 using System.Text;
 
 namespace RAG_AI_Reading
@@ -30,6 +31,8 @@ namespace RAG_AI_Reading
                 .AsSelf()
                 .WithScopedLifetime());
 
+            // 2.1 Add SignalR
+            builder.Services.AddSignalR();
 
             // 3. Configure JWT Authentication
             var jwtKey = builder.Configuration["Jwt:Key"];
@@ -57,10 +60,21 @@ namespace RAG_AI_Reading
                     {
                         OnMessageReceived = context =>
                         {
-                            var token = context.Request.Headers["Authorization"].ToString();
-                            if (!string.IsNullOrEmpty(token))
+                            // Check for SignalR connection token
+                            var accessToken = context.Request.Query["access_token"];
+                            var path = context.HttpContext.Request.Path;
+                            
+                            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/chatHub"))
                             {
-                                context.Token = token.Replace("Bearer ", "", StringComparison.OrdinalIgnoreCase).Trim();
+                                context.Token = accessToken;
+                            }
+                            else
+                            {
+                                var token = context.Request.Headers["Authorization"].ToString();
+                                if (!string.IsNullOrEmpty(token))
+                                {
+                                    context.Token = token.Replace("Bearer ", "", StringComparison.OrdinalIgnoreCase).Trim();
+                                }
                             }
                             return Task.CompletedTask;
                         }
@@ -105,9 +119,10 @@ namespace RAG_AI_Reading
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowAll",
-                    b => b.AllowAnyOrigin()
+                    b => b.WithOrigins("http://localhost:3000", "http://localhost:5173") // Add your frontend URLs
                           .AllowAnyMethod()
-                          .AllowAnyHeader());
+                          .AllowAnyHeader()
+                          .AllowCredentials()); // Required for SignalR
             });
 
             var app = builder.Build();
@@ -128,6 +143,9 @@ namespace RAG_AI_Reading
             app.UseAuthorization();
 
             app.MapControllers();
+            
+            // Map SignalR Hub
+            app.MapHub<ChatHub>("/chatHub");
 
             app.Run();
         }
