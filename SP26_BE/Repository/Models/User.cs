@@ -8,25 +8,48 @@ namespace Repository.Models;
 public partial class User
 {
     public int UserId { get; set; }
+
     public string FullName { get; set; }
+
     public string Email { get; set; }
+
     public string PasswordHash { get; set; }
+
     public string AvatarUrl { get; set; }
+
     public string Role { get; set; }
+
     public bool? IsActive { get; set; }
+
     public DateTime? CreatedAt { get; set; }
+
     public string RefreshToken { get; set; }
+
     public DateTime? RefreshTokenExpiryTime { get; set; }
+
     public string PasswordResetToken { get; set; }
+
     public DateTime? PasswordResetTokenExpiryTime { get; set; }
 
     public string DataEncryptionKey { get; set; }
 
     public virtual ICollection<Aijob> Aijobs { get; set; } = new List<Aijob>();
+
     public virtual ICollection<ChatSession> ChatSessions { get; set; } = new List<ChatSession>();
+
     public virtual ICollection<ImprovementSuggestion> ImprovementSuggestions { get; set; } = new List<ImprovementSuggestion>();
+
     public virtual ICollection<Project> Projects { get; set; } = new List<Project>();
+
+    public virtual ICollection<StaffAuthorContact> StaffAuthorContactAuthors { get; set; } = new List<StaffAuthorContact>();
+
+    public virtual ICollection<StaffAuthorContact> StaffAuthorContactStaffs { get; set; } = new List<StaffAuthorContact>();
+
+    public virtual ICollection<StaffAuthorMessage> StaffAuthorMessages { get; set; } = new List<StaffAuthorMessage>();
+
     public virtual ICollection<SystemConfig> SystemConfigs { get; set; } = new List<SystemConfig>();
+
     public virtual ICollection<SystemLog> SystemLogs { get; set; } = new List<SystemLog>();
+
     public virtual ICollection<UserSubscription> UserSubscriptions { get; set; } = new List<UserSubscription>();
 }
